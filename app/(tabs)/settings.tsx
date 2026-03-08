@@ -1,13 +1,52 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, TextInput } from 'react-native';
 import { ScreenContainer } from '@/components/screen-container';
 import { useAuth } from '@/hooks/use-auth';
 import { useColors } from '@/hooks/use-colors';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { trpc } from '@/lib/trpc';
+import { useRouter } from 'expo-router';
 
 export default function SettingsScreen() {
-  const { isAuthenticated, user, logout, loading } = useAuth();
+  const { isAuthenticated, user, logout, loading, refresh } = useAuth();
   const colors = useColors();
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const loginMutation = trpc.auth.login.useMutation();
+  const signupMutation = trpc.auth.signup.useMutation();
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('오류', '이메일과 비밀번호를 입력해주세요');
+      return;
+    }
+
+    try {
+      setIsLoggingIn(true);
+      const result = await loginMutation.mutateAsync({
+        email,
+        password,
+      });
+
+      if (result.success) {
+        Alert.alert('성공', '로그인되었습니다!');
+        setEmail('');
+        setPassword('');
+        await refresh();
+      }
+    } catch (error) {
+      Alert.alert('로그인 실패', error instanceof Error ? error.message : '알 수 없는 오류');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleSignup = () => {
+    router.push('/(modal)/signup');
+  };
 
   const handleLogout = async () => {
     try {
@@ -51,11 +90,65 @@ export default function SettingsScreen() {
               </View>
             ) : (
               <View>
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.label, { color: colors.foreground }]}>이메일</Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      { borderColor: colors.border, backgroundColor: colors.surface, color: colors.foreground },
+                    ]}
+                    placeholder="이메일을 입력하세요"
+                    placeholderTextColor={colors.muted}
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    editable={!isLoggingIn}
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.label, { color: colors.foreground }]}>비밀번호</Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      { borderColor: colors.border, backgroundColor: colors.surface, color: colors.foreground },
+                    ]}
+                    placeholder="비밀번호를 입력하세요"
+                    placeholderTextColor={colors.muted}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                    editable={!isLoggingIn}
+                  />
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.button, styles.loginButton, { backgroundColor: colors.primary }]}
+                  onPress={handleLogin}
+                  disabled={isLoggingIn}
+                >
+                  <IconSymbol name="arrow.right.circle" size={20} color="#fff" />
+                  <Text style={styles.buttonText}>{isLoggingIn ? '로그인 중...' : '로그인'}</Text>
+                </TouchableOpacity>
+
+                <View style={styles.divider}>
+                  <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+                  <Text style={[styles.dividerText, { color: colors.muted }]}>또는</Text>
+                  <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.button, styles.signupButton, { backgroundColor: colors.surface, borderColor: colors.primary, borderWidth: 1 }]}
+                  onPress={handleSignup}
+                  disabled={isLoggingIn}
+                >
+                  <IconSymbol name="person.badge.plus" size={20} color={colors.primary} />
+                  <Text style={[styles.buttonText, { color: colors.primary }]}>회원가입</Text>
+                </TouchableOpacity>
+
                 <Text style={[styles.note, { color: colors.muted }]}>
-                  🔓 현재 로그인되지 않았습니다. 클라우드 동기화를 사용하려면 로그인이 필요합니다.
-                </Text>
-                <Text style={[styles.note, { color: colors.muted, marginTop: 12 }]}>
-                  💡 팁: 현재는 로컬 저장소에만 데이터가 저장됩니다.
+                  💡 테스트 계정: test@example.com / password123
                 </Text>
               </View>
             )}
@@ -116,6 +209,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  inputGroup: {
+    gap: 8,
+    marginBottom: 12,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minHeight: 44,
+    fontSize: 14,
+  },
   button: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -125,15 +234,35 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     marginTop: 8,
   },
+  loginButton: {
+    marginBottom: 12,
+  },
   logoutButton: {},
+  signupButton: {
+    marginTop: 12,
+  },
   buttonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginVertical: 16,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    fontSize: 12,
+  },
   note: {
-    fontSize: 13,
-    lineHeight: 20,
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 8,
+    fontStyle: 'italic',
   },
   infoItem: {
     flexDirection: 'row',

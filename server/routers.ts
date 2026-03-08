@@ -18,6 +18,56 @@ export const appRouter = router({
         success: true,
       } as const;
     }),
+    login: publicProcedure
+      .input(
+        z.object({
+          email: z.string().email(),
+          password: z.string().min(6),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        // 간단한 테스트 로그인 (실제로는 데이터베이스에서 확인)
+        if (input.email === 'test@example.com' && input.password === 'password123') {
+          const user = {
+            id: 'test-user-1',
+            email: input.email,
+            name: 'Test User',
+            openId: 'test-openid',
+            loginMethod: 'email' as const,
+            lastSignedIn: new Date(),
+          };
+          
+          const cookieOptions = getSessionCookieOptions(ctx.req);
+          ctx.res.cookie(COOKIE_NAME, JSON.stringify(user), cookieOptions);
+          
+          return { success: true, user };
+        }
+        throw new Error('Invalid email or password');
+      }),
+    signup: publicProcedure
+      .input(
+        z.object({
+          email: z.string().email(),
+          password: z.string().min(6),
+          name: z.string().min(1),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        // 간단한 테스트 회원가입 (실제로는 데이터베이스에 저장)
+        const user = {
+          id: `user-${Date.now()}`,
+          email: input.email,
+          name: input.name,
+          openId: `openid-${Date.now()}`,
+          loginMethod: 'email' as const,
+          lastSignedIn: new Date(),
+        };
+        
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, JSON.stringify(user), cookieOptions);
+        
+        return { success: true, user };
+      }),
   }),
 
   ai: router({
