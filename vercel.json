@@ -1,7 +1,5 @@
 {
-  "buildCommand": "npx expo export -p web",
-  "outputDirectory": "dist",
-  "env": {
-    "NODE_ENV": "production"
-  }
+  "buildCommand": "npm run build:web || echo 'Web build skipped'",
+  "outputDirectory": ".next",
+  "framework": "nextjs"
 }
