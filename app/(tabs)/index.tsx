@@ -69,165 +69,171 @@ export default function HomeScreen() {
         <View style={[styles.nebula, styles.nebula2]} />
       </View>
 
-      <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.headerTitle}>✦ StarQuest</Text>
-            <Text style={styles.headerSubtitle}>나의 별자리 성취</Text>
-          </View>
-          <View style={styles.headerButtons}>
-            <TouchableOpacity
-              style={styles.statsButton}
-              onPress={() => router.push('/stats' as any)}
-              activeOpacity={0.8}
-            >
-              <IconSymbol name="chart.bar" size={20} color="#F5C842" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => router.push('/add' as any)}
-              activeOpacity={0.8}
-            >
-              <IconSymbol name="plus" size={22} color="#0A0E1A" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Progress bar */}
-        {totalStars > 0 && (
-          <View style={styles.progressSection}>
-            <View style={styles.progressHeader}>
-              <Text style={styles.progressLabel}>전체 진행률</Text>
-              <Text style={styles.progressCount}>
-                {completedStars} / {totalStars} 별
-              </Text>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 8 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.container}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.headerTitle}>✦ StarQuest</Text>
+              <Text style={styles.headerSubtitle}>나의 별자리 성취</Text>
             </View>
-            <View style={styles.progressBarBg}>
-              <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
-            </View>
-          </View>
-        )}
-
-        {/* Category tabs */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.categoryScroll}
-          contentContainerStyle={styles.categoryScrollContent}
-        >
-          {displayCategories.map((cat) => {
-            const catAchievements = achievements.filter((a) => a.categoryId === cat.id);
-            const isSelected = cat.id === currentCategoryId;
-            return (
+            <View style={styles.headerButtons}>
               <TouchableOpacity
-                key={cat.id}
-                style={[
-                  styles.categoryTab,
-                  isSelected && { borderColor: cat.color, backgroundColor: `${cat.color}20` },
-                ]}
-                onPress={() => setSelectedCategoryId(cat.id)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
-                <Text style={[styles.categoryName, isSelected && { color: cat.color }]}>
-                  {cat.name}
-                </Text>
-                {catAchievements.length > 0 && (
-                  <View style={[styles.categoryBadge, { backgroundColor: cat.color }]}>
-                    <Text style={styles.categoryBadgeText}>{catAchievements.length}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-
-        {/* Constellation view */}
-        <View style={styles.constellationContainer}>
-          {currentCategory && (
-            <>
-              <View style={styles.constellationHeader}>
-                <Text style={styles.constellationTitle}>
-                  {currentCategory.emoji} {currentCategory.name} 별자리
-                </Text>
-                <Text style={styles.constellationCount}>
-                  {currentAchievements.length}개의 별
-                </Text>
-              </View>
-              <ConstellationView
-                category={currentCategory}
-                achievements={currentAchievements}
-              />
-            </>
-          )}
-        </View>
-
-        {/* Lists section */}
-        {lists.length > 0 && (
-          <View style={styles.listsSection}>
-            <View style={styles.listsSectionHeader}>
-              <Text style={styles.listsSectionTitle}>📋 나의 리스트</Text>
-              <TouchableOpacity
-                style={styles.addListButton}
-                onPress={() => router.push('/add-list' as any)}
+                style={styles.statsButton}
+                onPress={() => router.push('/stats' as any)}
                 activeOpacity={0.8}
               >
-                <IconSymbol name="plus" size={16} color="#0A0E1A" />
+                <IconSymbol name="chart.bar" size={20} color="#F5C842" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => router.push('/add' as any)}
+                activeOpacity={0.8}
+              >
+                <IconSymbol name="plus" size={22} color="#0A0E1A" />
               </TouchableOpacity>
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.listsScroll}>
-              {lists.map((list) => {
-                const completionPercent = list.totalCount > 0 ? Math.round((list.completionCount / list.totalCount) * 100) : 0;
-                return (
-                  <TouchableOpacity
-                    key={list.id}
-                    style={styles.listCard}
-                    onPress={() => router.push(`/list/${list.id}` as any)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.listCardEmoji}>📋</Text>
-                    <Text style={styles.listCardTitle} numberOfLines={2}>
-                      {list.title}
-                    </Text>
-                    <View style={styles.listCardProgress}>
-                      <View style={styles.listCardProgressBg}>
-                        <View
-                          style={[
-                            styles.listCardProgressFill,
-                            { width: `${completionPercent}%` },
-                          ]}
-                        />
-                      </View>
-                      <Text style={styles.listCardProgressText}>
-                        {list.completionCount}/{list.totalCount}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
           </View>
-        )}
 
-        {/* Empty state */}
-        {totalStars === 0 && (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStarText}>✦</Text>
-            <Text style={styles.emptyTitle}>아직 별이 없어요</Text>
-            <Text style={styles.emptySubtitle}>
-              성취 목표를 추가하면{'\n'}나만의 별자리가 만들어져요
-            </Text>
-            <TouchableOpacity
-              style={styles.emptyAddButton}
-              onPress={() => router.push('/add' as any)}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.emptyAddButtonText}>첫 번째 별 추가하기</Text>
-            </TouchableOpacity>
+          {/* Progress bar */}
+          {totalStars > 0 && (
+            <View style={styles.progressSection}>
+              <View style={styles.progressHeader}>
+                <Text style={styles.progressLabel}>전체 진행률</Text>
+                <Text style={styles.progressCount}>
+                  {completedStars} / {totalStars} 별
+                </Text>
+              </View>
+              <View style={styles.progressBarBg}>
+                <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
+              </View>
+            </View>
+          )}
+
+          {/* Category tabs */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.categoryScroll}
+            contentContainerStyle={styles.categoryScrollContent}
+          >
+            {displayCategories.map((cat) => {
+              const catAchievements = achievements.filter((a) => a.categoryId === cat.id);
+              const isSelected = cat.id === currentCategoryId;
+              return (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={[
+                    styles.categoryTab,
+                    isSelected && { borderColor: cat.color, backgroundColor: `${cat.color}20` },
+                  ]}
+                  onPress={() => setSelectedCategoryId(cat.id)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+                  <Text style={[styles.categoryName, isSelected && { color: cat.color }]}>
+                    {cat.name}
+                  </Text>
+                  {catAchievements.length > 0 && (
+                    <View style={[styles.categoryBadge, { backgroundColor: cat.color }]}>
+                      <Text style={styles.categoryBadgeText}>{catAchievements.length}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          {/* Constellation view */}
+          <View style={styles.constellationContainer}>
+            {currentCategory && (
+              <>
+                <View style={styles.constellationHeader}>
+                  <Text style={styles.constellationTitle}>
+                    {currentCategory.emoji} {currentCategory.name} 별자리
+                  </Text>
+                  <Text style={styles.constellationCount}>
+                    {currentAchievements.length}개의 별
+                  </Text>
+                </View>
+                <ConstellationView
+                  category={currentCategory}
+                  achievements={currentAchievements}
+                />
+              </>
+            )}
           </View>
-        )}
-      </View>
+
+          {/* Lists section */}
+          {lists.length > 0 && (
+            <View style={styles.listsSection}>
+              <View style={styles.listsSectionHeader}>
+                <Text style={styles.listsSectionTitle}>📋 나의 리스트</Text>
+                <TouchableOpacity
+                  style={styles.addListButton}
+                  onPress={() => router.push('/add-list' as any)}
+                  activeOpacity={0.8}
+                >
+                  <IconSymbol name="plus" size={16} color="#0A0E1A" />
+                </TouchableOpacity>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.listsScroll}>
+                {lists.map((list) => {
+                  const completionPercent = list.totalCount > 0 ? Math.round((list.completionCount / list.totalCount) * 100) : 0;
+                  return (
+                    <TouchableOpacity
+                      key={list.id}
+                      style={styles.listCard}
+                      onPress={() => router.push(`/list/${list.id}` as any)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.listCardEmoji}>📋</Text>
+                      <Text style={styles.listCardTitle} numberOfLines={2}>
+                        {list.title}
+                      </Text>
+                      <View style={styles.listCardProgress}>
+                        <View style={styles.listCardProgressBg}>
+                          <View
+                            style={[
+                              styles.listCardProgressFill,
+                              { width: `${completionPercent}%` },
+                            ]}
+                          />
+                        </View>
+                        <Text style={styles.listCardProgressText}>
+                          {list.completionCount}/{list.totalCount}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          )}
+
+          {/* Empty state */}
+          {totalStars === 0 && (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStarText}>✦</Text>
+              <Text style={styles.emptyTitle}>아직 별이 없어요</Text>
+              <Text style={styles.emptySubtitle}>
+                성취 목표를 추가하면{'\n'}나만의 별자리가 만들어져요
+              </Text>
+              <TouchableOpacity
+                style={styles.emptyAddButton}
+                onPress={() => router.push('/add' as any)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.emptyAddButtonText}>첫 번째 별 추가하기</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -263,6 +269,13 @@ const styles = StyleSheet.create({
     opacity: 0.05,
     bottom: 100,
     right: -80,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
   },
   container: {
     flex: 1,
@@ -393,7 +406,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   constellationContainer: {
-    flex: 1,
+    marginBottom: 16,
   },
   constellationHeader: {
     flexDirection: 'row',
@@ -412,11 +425,11 @@ const styles = StyleSheet.create({
     color: '#718096',
   },
   emptyState: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 40,
-    marginTop: -60,
+    marginTop: 60,
+    minHeight: 300,
   },
   emptyStarText: {
     fontSize: 60,
