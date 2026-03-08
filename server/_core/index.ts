@@ -56,6 +56,9 @@ async function startServer() {
 
   registerOAuthRoutes(app);
 
+  // Serve static web client files
+  app.use(express.static("dist/web"));
+
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, timestamp: Date.now() });
   });
@@ -67,6 +70,13 @@ async function startServer() {
       createContext,
     }),
   );
+
+  // SPA fallback: serve index.html for all non-API routes
+  app.get("*", (req, res) => {
+    if (!req.path.startsWith("/api")) {
+      res.sendFile("dist/web/index.html", { root: process.cwd() });
+    }
+  });
 
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);
