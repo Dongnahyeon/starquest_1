@@ -17,6 +17,7 @@ import { StarryIntro } from '@/components/StarryIntro';
 import { ConstellationView } from '@/components/ConstellationView';
 import { useAchievementsContext } from '@/lib/achievements-context';
 import { useListsContext } from '@/lib/lists-context';
+import { SyncStatusBar } from '@/components/SyncStatusBar';
 import { Category } from '@/types/achievement';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -55,6 +56,9 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.root}>
+      {/* Sync Status Bar */}
+      <SyncStatusBar />
+
       {/* Intro animation */}
       {showIntro && <StarryIntro onFinish={() => setShowIntro(false)} />}
 
