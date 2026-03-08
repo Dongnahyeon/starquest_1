@@ -15,12 +15,16 @@ import { Platform } from 'react-native';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { StarIcon } from '@/components/StarIcon';
 import { useAchievementsContext } from '@/lib/achievements-context';
+import { useListsContext } from '@/lib/lists-context';
 import { Achievement, Category } from '@/types/achievement';
+import { ScreenContainer } from '@/components/screen-container';
 
 export default function ListScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { achievements, categories, completeAchievement, deleteAchievement } = useAchievementsContext();
+  const { lists, deleteList } = useListsContext();
+  const [selectedTab, setSelectedTab] = useState<'achievements' | 'lists'>('achievements');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | 'all'>('all');
   const [justCompleted, setJustCompleted] = useState<string | null>(null);
 
@@ -61,6 +65,21 @@ export default function ListScreen() {
     );
   };
 
+  const handleDeleteList = (listId: string, listTitle: string) => {
+    Alert.alert(
+      '리스트 삭제',
+      `"${listTitle}" 리스트를 삭제할까요?`,
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '삭제',
+          style: 'destructive',
+          onPress: () => deleteList(listId),
+        },
+      ]
+    );
+  };
+
   const renderAchievementItem = ({ item }: { item: Achievement }) => {
     const isJustCompleted = justCompleted === item.id;
     const category = categories.find((c) => c.id === item.categoryId);
@@ -82,214 +101,236 @@ export default function ListScreen() {
           <Text style={styles.achievementTitle} numberOfLines={1}>
             {item.title}
           </Text>
-          <Text style={styles.achievementMeta}>
-            완료 {item.completionCount}회
-            {item.lastCompletedAt && ` · 최근 ${formatDate(item.lastCompletedAt)}`}
+          <Text style={styles.achievementCategory}>{category?.emoji} {category?.name}</Text>
+        </View>
+        <View style={styles.achievementRight}>
+          <Text style={styles.achievementCount}>{item.completionCount}회</Text>
+          <TouchableOpacity
+            onPress={() => handleDelete(item)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <IconSymbol name="trash" size={18} color="#718096" />
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderListItem = ({ item }: { item: any }) => {
+    const completionPercent = item.totalCount > 0 ? Math.round((item.completionCount / item.totalCount) * 100) : 0;
+
+    return (
+      <TouchableOpacity
+        style={styles.listCard}
+        onPress={() => router.push(`/list/${item.id}` as any)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.listCardHeader}>
+          <Text style={styles.listCardTitle} numberOfLines={2}>
+            {item.title}
+          </Text>
+          <TouchableOpacity
+            onPress={() => handleDeleteList(item.id, item.title)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <IconSymbol name="trash" size={16} color="#718096" />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.listCardProgress}>
+          <View style={styles.listCardProgressBg}>
+            <View
+              style={[
+                styles.listCardProgressFill,
+                { width: `${completionPercent}%`, backgroundColor: item.isCompleted ? '#22C55E' : '#4ECDC4' },
+              ]}
+            />
+          </View>
+          <Text style={styles.listCardProgressText}>
+            {item.completionCount}/{item.totalCount}
           </Text>
         </View>
-        <TouchableOpacity
-          style={styles.completeButton}
-          onPress={() => handleComplete(item)}
-          activeOpacity={0.7}
-        >
-          <IconSymbol
-            name="checkmark.circle.fill"
-            size={28}
-            color={item.completionCount > 0 ? '#F5C842' : '#2D3748'}
-          />
-        </TouchableOpacity>
+        {item.isCompleted && (
+          <View style={styles.completedBadge}>
+            <Text style={styles.completedBadgeText}>✓ 완료</Text>
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
 
   return (
-    <View style={styles.root}>
-      {/* Background */}
-      <View style={styles.background}>
-        <View style={[styles.nebula, styles.nebula1]} />
+    <ScreenContainer className="bg-background">
+      {/* Tab selector */}
+      <View style={styles.tabSelector}>
+        <TouchableOpacity
+          style={[styles.tab, selectedTab === 'achievements' && styles.tabActive]}
+          onPress={() => setSelectedTab('achievements')}
+        >
+          <IconSymbol name="sparkles" size={18} color={selectedTab === 'achievements' ? '#F5C842' : '#718096'} />
+          <Text style={[styles.tabText, selectedTab === 'achievements' && styles.tabTextActive]}>
+            별 목록
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, selectedTab === 'lists' && styles.tabActive]}
+          onPress={() => setSelectedTab('lists')}
+        >
+          <IconSymbol name="list.bullet" size={18} color={selectedTab === 'lists' ? '#F5C842' : '#718096'} />
+          <Text style={[styles.tabText, selectedTab === 'lists' && styles.tabTextActive]}>
+            리스트
+          </Text>
+        </TouchableOpacity>
       </View>
 
-      <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>성취 목록</Text>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => router.push('/add' as any)}
-            activeOpacity={0.8}
+      {/* Content */}
+      {selectedTab === 'achievements' ? (
+        <View style={styles.content}>
+          {/* Category filter */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.categoryScroll}
+            contentContainerStyle={styles.categoryScrollContent}
           >
-            <IconSymbol name="plus" size={22} color="#0A0E1A" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Category filter */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.filterScroll}
-          contentContainerStyle={styles.filterScrollContent}
-        >
-          <TouchableOpacity
-            style={[
-              styles.filterTab,
-              selectedCategoryId === 'all' && styles.filterTabActive,
-            ]}
-            onPress={() => setSelectedCategoryId('all')}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[
-                styles.filterTabText,
-                selectedCategoryId === 'all' && styles.filterTabTextActive,
-              ]}
-            >
-              전체
-            </Text>
-          </TouchableOpacity>
-          {categories.map((cat) => (
             <TouchableOpacity
-              key={cat.id}
-              style={[
-                styles.filterTab,
-                selectedCategoryId === cat.id && {
-                  borderColor: cat.color,
-                  backgroundColor: `${cat.color}20`,
-                },
-              ]}
-              onPress={() => setSelectedCategoryId(cat.id)}
-              activeOpacity={0.7}
+              style={[styles.categoryTab, selectedCategoryId === 'all' && styles.categoryTabActive]}
+              onPress={() => setSelectedCategoryId('all')}
             >
-              <Text style={styles.filterEmoji}>{cat.emoji}</Text>
-              <Text
-                style={[
-                  styles.filterTabText,
-                  selectedCategoryId === cat.id && { color: cat.color },
-                ]}
-              >
-                {cat.name}
+              <Text style={[styles.categoryName, selectedCategoryId === 'all' && styles.categoryNameActive]}>
+                전체
               </Text>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        {/* Achievement list */}
-        {achievements.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>✦</Text>
-            <Text style={styles.emptyTitle}>아직 성취 목록이 없어요</Text>
-            <Text style={styles.emptySubtitle}>+ 버튼을 눌러 첫 번째 별을 추가해보세요</Text>
-            <TouchableOpacity
-              style={styles.emptyAddButton}
-              onPress={() => router.push('/add' as any)}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.emptyAddButtonText}>성취 추가하기</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <FlatList
-            data={grouped}
-            keyExtractor={(item) => item.category.id}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            renderItem={({ item: group }) => (
-              <View style={styles.groupSection}>
-                <View style={styles.groupHeader}>
-                  <Text style={styles.groupEmoji}>{group.category.emoji}</Text>
-                  <Text style={[styles.groupTitle, { color: group.category.color }]}>
-                    {group.category.name}
+            {categories.map((cat) => {
+              const catAchievements = achievements.filter((a) => a.categoryId === cat.id);
+              const isSelected = cat.id === selectedCategoryId;
+              return (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={[styles.categoryTab, isSelected && styles.categoryTabActive]}
+                  onPress={() => setSelectedCategoryId(cat.id)}
+                >
+                  <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+                  <Text style={[styles.categoryName, isSelected && styles.categoryNameActive]}>
+                    {cat.name}
                   </Text>
-                  <View style={[styles.groupBadge, { backgroundColor: group.category.color }]}>
-                    <Text style={styles.groupBadgeText}>{group.items.length}</Text>
-                  </View>
-                </View>
-                {group.items.map((item) => (
-                  <View key={item.id}>
-                    {renderAchievementItem({ item })}
-                  </View>
-                ))}
-              </View>
-            )}
-          />
-        )}
-      </View>
-    </View>
+                  {catAchievements.length > 0 && (
+                    <View style={styles.categoryBadge}>
+                      <Text style={styles.categoryBadgeText}>{catAchievements.length}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          {/* Achievements list */}
+          {filteredAchievements.length > 0 ? (
+            <FlatList
+              data={filteredAchievements}
+              keyExtractor={(item) => item.id}
+              renderItem={renderAchievementItem}
+              scrollEnabled={false}
+              contentContainerStyle={styles.listContent}
+            />
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>✦</Text>
+              <Text style={styles.emptyStateTitle}>별이 없어요</Text>
+              <Text style={styles.emptyStateSubtitle}>새로운 성취 목표를 추가해보세요</Text>
+            </View>
+          )}
+        </View>
+      ) : (
+        <View style={styles.content}>
+          {/* Lists */}
+          {lists.length > 0 ? (
+            <FlatList
+              data={lists}
+              keyExtractor={(item) => item.id}
+              renderItem={renderListItem}
+              scrollEnabled={false}
+              contentContainerStyle={styles.listContent}
+              numColumns={2}
+              columnWrapperStyle={styles.listGrid}
+            />
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>📋</Text>
+              <Text style={styles.emptyStateTitle}>리스트가 없어요</Text>
+              <Text style={styles.emptyStateSubtitle}>새로운 리스트를 추가해보세요</Text>
+              <TouchableOpacity
+                style={styles.emptyAddButton}
+                onPress={() => router.push('/add-list' as any)}
+              >
+                <Text style={styles.emptyAddButtonText}>+ 리스트 추가</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* FAB for adding */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => {
+          if (selectedTab === 'achievements') {
+            router.push('/add' as any);
+          } else {
+            router.push('/add-list' as any);
+          }
+        }}
+      >
+        <IconSymbol name="plus" size={24} color="#0A0E1A" />
+      </TouchableOpacity>
+    </ScreenContainer>
   );
 }
 
-function formatDate(isoString: string): string {
-  const date = new Date(isoString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) return '오늘';
-  if (diffDays === 1) return '어제';
-  if (diffDays < 7) return `${diffDays}일 전`;
-  return `${date.getMonth() + 1}/${date.getDate()}`;
-}
-
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: '#0A0E1A',
-  },
-  background: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  nebula: {
-    position: 'absolute',
-    borderRadius: 999,
-  },
-  nebula1: {
-    width: 300,
-    height: 300,
-    backgroundColor: '#2B6CB0',
-    opacity: 0.04,
-    top: 50,
-    right: -80,
-  },
-  container: {
-    flex: 1,
-  },
-  header: {
+  tabSelector: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1E2A3A',
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#E2E8F0',
-  },
-  addButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#F5C842',
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#F5C842',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    elevation: 5,
+    paddingVertical: 10,
+    borderRadius: 8,
+    gap: 6,
+    backgroundColor: '#111827',
   },
-  filterScroll: {
+  tabActive: {
+    backgroundColor: '#1E2A3A',
+  },
+  tabText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#718096',
+  },
+  tabTextActive: {
+    color: '#F5C842',
+  },
+  content: {
+    flex: 1,
+    paddingTop: 12,
+  },
+  categoryScroll: {
     maxHeight: 50,
     marginBottom: 12,
-  },
-  filterScrollContent: {
     paddingHorizontal: 16,
+  },
+  categoryScrollContent: {
     gap: 8,
     alignItems: 'center',
   },
-  filterTab: {
+  categoryTab: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
@@ -300,64 +341,53 @@ const styles = StyleSheet.create({
     backgroundColor: '#111827',
     gap: 4,
   },
-  filterTabActive: {
+  categoryTabActive: {
     borderColor: '#F5C842',
     backgroundColor: '#F5C84220',
   },
-  filterEmoji: {
-    fontSize: 13,
+  categoryEmoji: {
+    fontSize: 14,
   },
-  filterTabText: {
-    fontSize: 13,
+  categoryName: {
+    fontSize: 12,
     color: '#718096',
     fontWeight: '500',
   },
-  filterTabTextActive: {
+  categoryNameActive: {
     color: '#F5C842',
+  },
+  categoryBadge: {
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    backgroundColor: '#F5C842',
+  },
+  categoryBadgeText: {
+    fontSize: 10,
+    color: '#0A0E1A',
+    fontWeight: '700',
   },
   listContent: {
     paddingHorizontal: 16,
-    paddingBottom: 100,
+    paddingBottom: 80,
   },
-  groupSection: {
-    marginBottom: 20,
-  },
-  groupHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    gap: 6,
-  },
-  groupEmoji: {
-    fontSize: 16,
-  },
-  groupTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    flex: 1,
-  },
-  groupBadge: {
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
-  },
-  groupBadgeText: {
-    fontSize: 11,
-    color: '#0A0E1A',
-    fontWeight: '700',
+  listGrid: {
+    gap: 12,
+    marginBottom: 12,
   },
   achievementCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#111827',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 8,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#1E2A3A',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    marginBottom: 8,
   },
   achievementLeft: {
     marginRight: 12,
@@ -366,17 +396,76 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   achievementTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
     color: '#E2E8F0',
-    marginBottom: 3,
+    marginBottom: 2,
   },
-  achievementMeta: {
+  achievementCategory: {
     fontSize: 12,
     color: '#718096',
   },
-  completeButton: {
-    padding: 4,
+  achievementRight: {
+    alignItems: 'flex-end',
+    gap: 6,
+  },
+  achievementCount: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#F5C842',
+  },
+  listCard: {
+    flex: 1,
+    backgroundColor: '#111827',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#1E2A3A',
+    padding: 12,
+  },
+  listCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+    gap: 8,
+  },
+  listCardTitle: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#E2E8F0',
+    lineHeight: 18,
+  },
+  listCardProgress: {
+    gap: 4,
+    marginBottom: 8,
+  },
+  listCardProgressBg: {
+    height: 4,
+    backgroundColor: '#1E2A3A',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  listCardProgressFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  listCardProgressText: {
+    fontSize: 10,
+    color: '#718096',
+    textAlign: 'right',
+  },
+  completedBadge: {
+    backgroundColor: '#22C55E20',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    alignItems: 'center',
+  },
+  completedBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#22C55E',
   },
   emptyState: {
     flex: 1,
@@ -384,38 +473,48 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 40,
   },
-  emptyIcon: {
-    fontSize: 56,
-    color: '#2D3748',
-    marginBottom: 16,
+  emptyStateText: {
+    fontSize: 48,
+    marginBottom: 12,
   },
-  emptyTitle: {
+  emptyStateTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#4A5568',
-    marginBottom: 8,
+    color: '#E2E8F0',
+    marginBottom: 6,
   },
-  emptySubtitle: {
-    fontSize: 14,
-    color: '#2D3748',
+  emptyStateSubtitle: {
+    fontSize: 13,
+    color: '#718096',
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 28,
+    marginBottom: 16,
   },
   emptyAddButton: {
-    backgroundColor: '#F5C842',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 24,
-    shadowColor: '#F5C842',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 4,
+    backgroundColor: '#4ECDC4',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginTop: 8,
   },
   emptyAddButtonText: {
     color: '#0A0E1A',
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '700',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#F5C842',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#F5C842',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 5,
   },
 });
