@@ -8,6 +8,12 @@ export const themeColors: {
   success: { light: string; dark: string };
   warning: { light: string; dark: string };
   error: { light: string; dark: string };
+  starDim: { light: string; dark: string };
+  starGlow: { light: string; dark: string };
+  starMid: { light: string; dark: string };
+  nebula1: { light: string; dark: string };
+  nebula2: { light: string; dark: string };
+  constellation: { light: string; dark: string };
 };
 
 declare const themeConfig: {

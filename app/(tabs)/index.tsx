@@ -1,48 +1,370 @@
-import { ScrollView, Text, View, TouchableOpacity } from "react-native";
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  Animated,
+  Dimensions,
+  FlatList,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { StarryIntro } from '@/components/StarryIntro';
+import { ConstellationView } from '@/components/ConstellationView';
+import { useAchievementsContext } from '@/lib/achievements-context';
+import { Category } from '@/types/achievement';
 
-import { ScreenContainer } from "@/components/screen-container";
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-/**
- * Home Screen - NativeWind Example
- *
- * This template uses NativeWind (Tailwind CSS for React Native).
- * You can use familiar Tailwind classes directly in className props.
- *
- * Key patterns:
- * - Use `className` instead of `style` for most styling
- * - Theme colors: use tokens directly (bg-background, text-foreground, bg-primary, etc.); no dark: prefix needed
- * - Responsive: standard Tailwind breakpoints work on web
- * - Custom colors defined in tailwind.config.js
- */
 export default function HomeScreen() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { achievements, categories, totalCompletions, totalAchievements } = useAchievementsContext();
+  const [showIntro, setShowIntro] = useState(true);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+
+  // Get categories that have achievements
+  const activeCategories = categories.filter((cat) =>
+    achievements.some((a) => a.categoryId === cat.id)
+  );
+
+  // Include all categories for display
+  const displayCategories = categories;
+
+  const currentCategoryId = selectedCategoryId ?? (displayCategories[0]?.id ?? null);
+  const currentCategory = displayCategories.find((c) => c.id === currentCategoryId) ?? displayCategories[0];
+  const currentAchievements = achievements.filter((a) => a.categoryId === currentCategoryId);
+
+  const totalStars = achievements.length;
+  const completedStars = achievements.filter((a) => a.completionCount > 0).length;
+  const progressPercent = totalStars > 0 ? (completedStars / totalStars) * 100 : 0;
+
   return (
-    <ScreenContainer className="p-6">
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View className="flex-1 gap-8">
-          {/* Hero Section */}
-          <View className="items-center gap-2">
-            <Text className="text-4xl font-bold text-foreground">Welcome</Text>
-            <Text className="text-base text-muted text-center">
-              Edit app/(tabs)/index.tsx to get started
-            </Text>
-          </View>
+    <View style={styles.root}>
+      {/* Intro animation */}
+      {showIntro && <StarryIntro onFinish={() => setShowIntro(false)} />}
 
-          {/* Example Card */}
-          <View className="w-full max-w-sm self-center bg-surface rounded-2xl p-6 shadow-sm border border-border">
-            <Text className="text-lg font-semibold text-foreground mb-2">NativeWind Ready</Text>
-            <Text className="text-sm text-muted leading-relaxed">
-              Use Tailwind CSS classes directly in your React Native components.
-            </Text>
-          </View>
+      {/* Background */}
+      <View style={styles.background}>
+        {/* Nebula effects */}
+        <View style={[styles.nebula, styles.nebula1]} />
+        <View style={[styles.nebula, styles.nebula2]} />
+      </View>
 
-          {/* Example Button */}
-          <View className="items-center">
-            <TouchableOpacity className="bg-primary px-6 py-3 rounded-full active:opacity-80">
-              <Text className="text-background font-semibold">Get Started</Text>
+      <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.headerTitle}>✦ StarQuest</Text>
+            <Text style={styles.headerSubtitle}>나의 별자리 성취</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => router.push('/add' as any)}
+            activeOpacity={0.8}
+          >
+            <IconSymbol name="plus" size={22} color="#0A0E1A" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Progress bar */}
+        {totalStars > 0 && (
+          <View style={styles.progressSection}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressLabel}>전체 진행률</Text>
+              <Text style={styles.progressCount}>
+                {completedStars} / {totalStars} 별
+              </Text>
+            </View>
+            <View style={styles.progressBarBg}>
+              <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
+            </View>
+          </View>
+        )}
+
+        {/* Category tabs */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoryScroll}
+          contentContainerStyle={styles.categoryScrollContent}
+        >
+          {displayCategories.map((cat) => {
+            const catAchievements = achievements.filter((a) => a.categoryId === cat.id);
+            const isSelected = cat.id === currentCategoryId;
+            return (
+              <TouchableOpacity
+                key={cat.id}
+                style={[
+                  styles.categoryTab,
+                  isSelected && { borderColor: cat.color, backgroundColor: `${cat.color}20` },
+                ]}
+                onPress={() => setSelectedCategoryId(cat.id)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+                <Text style={[styles.categoryName, isSelected && { color: cat.color }]}>
+                  {cat.name}
+                </Text>
+                {catAchievements.length > 0 && (
+                  <View style={[styles.categoryBadge, { backgroundColor: cat.color }]}>
+                    <Text style={styles.categoryBadgeText}>{catAchievements.length}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
+        {/* Constellation view */}
+        <View style={styles.constellationContainer}>
+          {currentCategory && (
+            <>
+              <View style={styles.constellationHeader}>
+                <Text style={styles.constellationTitle}>
+                  {currentCategory.emoji} {currentCategory.name} 별자리
+                </Text>
+                <Text style={styles.constellationCount}>
+                  {currentAchievements.length}개의 별
+                </Text>
+              </View>
+              <ConstellationView
+                category={currentCategory}
+                achievements={currentAchievements}
+              />
+            </>
+          )}
+        </View>
+
+        {/* Empty state */}
+        {totalStars === 0 && (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStarText}>✦</Text>
+            <Text style={styles.emptyTitle}>아직 별이 없어요</Text>
+            <Text style={styles.emptySubtitle}>
+              성취 목표를 추가하면{'\n'}나만의 별자리가 만들어져요
+            </Text>
+            <TouchableOpacity
+              style={styles.emptyAddButton}
+              onPress={() => router.push('/add' as any)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.emptyAddButtonText}>첫 번째 별 추가하기</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </ScrollView>
-    </ScreenContainer>
+        )}
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: '#0A0E1A',
+  },
+  background: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  nebula: {
+    position: 'absolute',
+    borderRadius: 999,
+  },
+  nebula1: {
+    width: 350,
+    height: 350,
+    backgroundColor: '#553C9A',
+    opacity: 0.04,
+    top: -80,
+    left: -100,
+  },
+  nebula2: {
+    width: 280,
+    height: 280,
+    backgroundColor: '#2B6CB0',
+    opacity: 0.05,
+    bottom: 100,
+    right: -80,
+  },
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#F5C842',
+    letterSpacing: 1,
+    textShadowColor: '#F5C842',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    color: '#718096',
+    marginTop: 2,
+  },
+  addButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F5C842',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#F5C842',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  progressSection: {
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  progressLabel: {
+    fontSize: 12,
+    color: '#718096',
+  },
+  progressCount: {
+    fontSize: 12,
+    color: '#F5C842',
+    fontWeight: '600',
+  },
+  progressBarBg: {
+    height: 4,
+    backgroundColor: '#1E2A3A',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#F5C842',
+    borderRadius: 2,
+    shadowColor: '#F5C842',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+  },
+  categoryScroll: {
+    maxHeight: 60,
+    marginBottom: 8,
+  },
+  categoryScrollContent: {
+    paddingHorizontal: 16,
+    gap: 8,
+    alignItems: 'center',
+  },
+  categoryTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#1E2A3A',
+    backgroundColor: '#111827',
+    gap: 5,
+    position: 'relative',
+  },
+  categoryEmoji: {
+    fontSize: 14,
+  },
+  categoryName: {
+    fontSize: 13,
+    color: '#718096',
+    fontWeight: '500',
+  },
+  categoryBadge: {
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    marginLeft: 2,
+  },
+  categoryBadgeText: {
+    fontSize: 10,
+    color: '#0A0E1A',
+    fontWeight: '700',
+  },
+  constellationContainer: {
+    flex: 1,
+  },
+  constellationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 8,
+  },
+  constellationTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#E2E8F0',
+  },
+  constellationCount: {
+    fontSize: 12,
+    color: '#718096',
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 40,
+    marginTop: -60,
+  },
+  emptyStarText: {
+    fontSize: 60,
+    color: '#2D3748',
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#4A5568',
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#2D3748',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 28,
+  },
+  emptyAddButton: {
+    backgroundColor: '#F5C842',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+    shadowColor: '#F5C842',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  emptyAddButtonText: {
+    color: '#0A0E1A',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+});
