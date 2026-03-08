@@ -7,8 +7,8 @@ export interface ListItem {
   listId: string;
   title: string;
   completed: boolean;
-  completedAt?: string; // ISO 8601 format
-  createdAt: string;
+  completedAt?: string; // ISO 8601 format - 항목 완료 날짜
+  createdAt: string; // 항목 추가 날짜
 }
 
 /**

@@ -13,17 +13,21 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenContainer } from '@/components/screen-container';
 import { BadgeDisplay, BadgeGrid, BadgeDetailModal } from '@/components/BadgeDisplay';
 import { useListsContext } from '@/lib/lists-context';
+import { useAchievementsContext } from '@/lib/achievements-context';
 import { useStats } from '@/hooks/use-stats';
 import { BADGE_DEFINITIONS, BadgeType } from '@/types/badge';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { CompletionChart } from '@/components/CompletionChart';
 
 export default function StatsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { lists } = useListsContext();
+  const { achievements } = useAchievementsContext();
   const { stats } = useStats(lists);
   const [selectedBadge, setSelectedBadge] = useState<BadgeType | null>(null);
   const [showBadgeDetail, setShowBadgeDetail] = useState(false);
+  const [chartType, setChartType] = useState<'weekly' | 'monthly'>('weekly');
 
   const completedLists = lists.filter((l) => l.isCompleted);
 
@@ -120,6 +124,30 @@ export default function StatsScreen() {
                 {Math.round((stats.totalListsCompleted / stats.totalListsCreated) * 100)}% ({stats.totalListsCompleted}/{stats.totalListsCreated})
               </Text>
             </View>
+          </View>
+        )}
+
+        {/* Completion Trend Chart */}
+        {achievements.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.chartHeaderContainer}>
+              <Text style={styles.sectionTitle}>📊 완료 추이</Text>
+              <View style={styles.chartTypeButtons}>
+                <TouchableOpacity
+                  style={[styles.chartTypeButton, chartType === 'weekly' && styles.chartTypeButtonActive]}
+                  onPress={() => setChartType('weekly')}
+                >
+                  <Text style={[styles.chartTypeButtonText, chartType === 'weekly' && styles.chartTypeButtonTextActive]}>주별</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.chartTypeButton, chartType === 'monthly' && styles.chartTypeButtonActive]}
+                  onPress={() => setChartType('monthly')}
+                >
+                  <Text style={[styles.chartTypeButtonText, chartType === 'monthly' && styles.chartTypeButtonTextActive]}>월별</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <CompletionChart achievements={achievements} chartType={chartType} />
           </View>
         )}
 
@@ -268,6 +296,36 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+  },
+  chartHeaderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  chartTypeButtons: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  chartTypeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#1E2A3A',
+    backgroundColor: '#111827',
+  },
+  chartTypeButtonActive: {
+    backgroundColor: '#4ECDC4',
+    borderColor: '#4ECDC4',
+  },
+  chartTypeButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#718096',
+  },
+  chartTypeButtonTextActive: {
+    color: '#0A0E1A',
   },
   timeStatsContainer: {
     flexDirection: 'row',
