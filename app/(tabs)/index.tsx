@@ -16,6 +16,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { StarryIntro } from '@/components/StarryIntro';
 import { ConstellationView } from '@/components/ConstellationView';
 import { useAchievementsContext } from '@/lib/achievements-context';
+import { useListsContext } from '@/lib/lists-context';
 import { Category } from '@/types/achievement';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -24,6 +25,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { achievements, categories, totalCompletions, totalAchievements } = useAchievementsContext();
+  const { lists } = useListsContext();
   const [showIntro, setShowIntro] = useState(true);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
@@ -139,6 +141,53 @@ export default function HomeScreen() {
             </>
           )}
         </View>
+
+        {/* Lists section */}
+        {lists.length > 0 && (
+          <View style={styles.listsSection}>
+            <View style={styles.listsSectionHeader}>
+              <Text style={styles.listsSectionTitle}>📋 나의 리스트</Text>
+              <TouchableOpacity
+                style={styles.addListButton}
+                onPress={() => router.push('/add-list' as any)}
+                activeOpacity={0.8}
+              >
+                <IconSymbol name="plus" size={16} color="#0A0E1A" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.listsScroll}>
+              {lists.map((list) => {
+                const completionPercent = list.totalCount > 0 ? Math.round((list.completionCount / list.totalCount) * 100) : 0;
+                return (
+                  <TouchableOpacity
+                    key={list.id}
+                    style={styles.listCard}
+                    onPress={() => router.push(`/list/${list.id}` as any)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.listCardEmoji}>📋</Text>
+                    <Text style={styles.listCardTitle} numberOfLines={2}>
+                      {list.title}
+                    </Text>
+                    <View style={styles.listCardProgress}>
+                      <View style={styles.listCardProgressBg}>
+                        <View
+                          style={[
+                            styles.listCardProgressFill,
+                            { width: `${completionPercent}%` },
+                          ]}
+                        />
+                      </View>
+                      <Text style={styles.listCardProgressText}>
+                        {list.completionCount}/{list.totalCount}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
 
         {/* Empty state */}
         {totalStars === 0 && (
@@ -366,5 +415,79 @@ const styles = StyleSheet.create({
     color: '#0A0E1A',
     fontSize: 15,
     fontWeight: '700',
+  },
+  listsSection: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  listsSectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  listsSectionTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#E2E8F0',
+  },
+  addListButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#4ECDC4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#4ECDC4',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  listsScroll: {
+    marginHorizontal: -20,
+    paddingHorizontal: 20,
+  },
+  listCard: {
+    width: 140,
+    backgroundColor: '#111827',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#1E2A3A',
+    padding: 12,
+    marginRight: 10,
+    alignItems: 'center',
+  },
+  listCardEmoji: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+  listCardTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#E2E8F0',
+    textAlign: 'center',
+    marginBottom: 10,
+    lineHeight: 16,
+  },
+  listCardProgress: {
+    width: '100%',
+    gap: 4,
+  },
+  listCardProgressBg: {
+    height: 4,
+    backgroundColor: '#1E2A3A',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  listCardProgressFill: {
+    height: '100%',
+    backgroundColor: '#4ECDC4',
+    borderRadius: 2,
+  },
+  listCardProgressText: {
+    fontSize: 10,
+    color: '#718096',
+    textAlign: 'center',
   },
 });
