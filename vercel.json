@@ -1,12 +1,7 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "npx expo export -p web",
   "outputDirectory": "dist",
   "env": {
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "server/_core/index.ts": {
-      "runtime": "nodejs18.x"
-    }
   }
 }
