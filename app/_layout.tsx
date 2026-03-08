@@ -21,6 +21,8 @@ import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-run
 import { AchievementsProvider } from "@/lib/achievements-context";
 import { ListsProvider } from "@/lib/lists-context";
 import { useAutoSync } from "@/hooks/use-auto-sync";
+import { useSyncData } from "@/hooks/use-sync-data";
+import { useDownloadSync } from "@/hooks/use-download-sync";
 
 const DEFAULT_WEB_INSETS: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const DEFAULT_WEB_FRAME: Rect = { x: 0, y: 0, width: 0, height: 0 };
@@ -84,6 +86,8 @@ export default function RootLayout() {
 
   // Auto-sync data when authenticated
   useAutoSync();
+  useSyncData();
+  useDownloadSync();
 
   const content = (
     <GestureHandlerRootView style={{ flex: 1 }}>
