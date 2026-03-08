@@ -97,3 +97,19 @@
 - [ ] Vercel 웹 클라이언트 배포
 - [ ] iOS 홈화면 웹 앱 추가
 - [ ] 최종 체크포인트
+
+
+## 메모 기능 추가
+
+- [x] Achievement 타입에 completionNotes 필드 추가
+- [x] completeAchievement 함수에 note 매개변수 추가
+- [x] CompletionNoteModal 컴포넌트 생성
+- [x] 성취 상세 화면에 메모 추가 기능 통합
+- [x] 완료 기록에 메모 날짜별 표시
+
+
+## 홈화면 리스트 최적화
+
+- [x] 홈화면에서 최근 5개 리스트만 표시
+- [x] 추가 리스트 개수 표시
+- [x] "전체 리스트 보기" 버튼 추가

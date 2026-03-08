@@ -8,6 +8,7 @@ export interface Achievement {
   createdAt: string;
   lastCompletedAt?: string;
   completionHistory: string[]; // ISO date strings
+  completionNotes?: Record<string, string>; // 완료 날짜별 메모 { "2026-03-08": "메모 내용" }
 }
 
 export interface Category {

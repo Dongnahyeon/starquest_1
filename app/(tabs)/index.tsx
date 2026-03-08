@@ -54,6 +54,10 @@ export default function HomeScreen() {
   const completedStars = achievements.filter((a) => a.completionCount > 0).length;
   const progressPercent = totalStars > 0 ? (completedStars / totalStars) * 100 : 0;
 
+  // 최근 5개 리스트만 표시 (최근 사용 순서)
+  const recentLists = lists.slice(-5).reverse();
+  const hasMoreLists = lists.length > 5;
+
   return (
     <View style={styles.root}>
       {/* Sync Status Bar */}
@@ -168,11 +172,18 @@ export default function HomeScreen() {
             )}
           </View>
 
-          {/* Lists section */}
+          {/* Lists section - 최근 5개만 표시 */}
           {lists.length > 0 && (
             <View style={styles.listsSection}>
               <View style={styles.listsSectionHeader}>
-                <Text style={styles.listsSectionTitle}>📋 나의 리스트</Text>
+                <View>
+                  <Text style={styles.listsSectionTitle}>📋 나의 리스트</Text>
+                  {hasMoreLists && (
+                    <Text style={styles.listsCountText}>
+                      {lists.length}개 중 최근 5개 표시
+                    </Text>
+                  )}
+                </View>
                 <TouchableOpacity
                   style={styles.addListButton}
                   onPress={() => router.push('/add-list' as any)}
@@ -181,37 +192,54 @@ export default function HomeScreen() {
                   <IconSymbol name="plus" size={16} color="#0A0E1A" />
                 </TouchableOpacity>
               </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.listsScroll}>
-                {lists.map((list) => {
-                  const completionPercent = list.totalCount > 0 ? Math.round((list.completionCount / list.totalCount) * 100) : 0;
-                  return (
-                    <TouchableOpacity
-                      key={list.id}
-                      style={styles.listCard}
-                      onPress={() => router.push(`/list/${list.id}` as any)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.listCardEmoji}>📋</Text>
-                      <Text style={styles.listCardTitle} numberOfLines={2}>
-                        {list.title}
-                      </Text>
-                      <View style={styles.listCardProgress}>
-                        <View style={styles.listCardProgressBg}>
-                          <View
-                            style={[
-                              styles.listCardProgressFill,
-                              { width: `${completionPercent}%` },
-                            ]}
-                          />
-                        </View>
-                        <Text style={styles.listCardProgressText}>
-                          {list.completionCount}/{list.totalCount}
+              
+              {recentLists.length > 0 ? (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.listsScroll}>
+                  {recentLists.map((list) => {
+                    const completionPercent = list.totalCount > 0 ? Math.round((list.completionCount / list.totalCount) * 100) : 0;
+                    return (
+                      <TouchableOpacity
+                        key={list.id}
+                        style={styles.listCard}
+                        onPress={() => router.push(`/list/${list.id}` as any)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.listCardEmoji}>📋</Text>
+                        <Text style={styles.listCardTitle} numberOfLines={2}>
+                          {list.title}
                         </Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
+                        <View style={styles.listCardProgress}>
+                          <View style={styles.listCardProgressBg}>
+                            <View
+                              style={[
+                                styles.listCardProgressFill,
+                                { width: `${completionPercent}%` },
+                              ]}
+                            />
+                          </View>
+                          <Text style={styles.listCardProgressText}>
+                            {list.completionCount}/{list.totalCount}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              ) : null}
+
+              {/* View all lists button */}
+              {hasMoreLists && (
+                <TouchableOpacity
+                  style={styles.viewAllButton}
+                  onPress={() => router.push('/(tabs)/lists' as any)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.viewAllButtonText}>
+                    전체 리스트 보기 ({lists.length}개)
+                  </Text>
+                  <IconSymbol name="arrow.right" size={16} color="#4ECDC4" />
+                </TouchableOpacity>
+              )}
             </View>
           )}
 
@@ -480,6 +508,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#E2E8F0',
   },
+  listsCountText: {
+    fontSize: 11,
+    color: '#718096',
+    marginTop: 2,
+  },
   addListButton: {
     width: 32,
     height: 32,
@@ -496,6 +529,7 @@ const styles = StyleSheet.create({
   listsScroll: {
     marginHorizontal: -20,
     paddingHorizontal: 20,
+    marginBottom: 12,
   },
   listCard: {
     width: 140,
@@ -538,5 +572,22 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#718096',
     textAlign: 'center',
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#1E2A3A',
+    backgroundColor: '#111827',
+    gap: 6,
+  },
+  viewAllButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#4ECDC4',
   },
 });
