@@ -15,6 +15,7 @@ export function useLists() {
       if (data) {
         const parsed = JSON.parse(data) as List[];
         setLists(parsed);
+        console.log('Lists loaded:', parsed.length);
       }
     } catch (error) {
       console.error('Failed to load lists:', error);
@@ -27,9 +28,11 @@ export function useLists() {
   const saveLists = useCallback(async (newLists: List[]) => {
     try {
       await AsyncStorage.setItem(LISTS_STORAGE_KEY, JSON.stringify(newLists));
-      setLists(newLists);
+      console.log('Lists saved:', newLists.length);
+      return true;
     } catch (error) {
       console.error('Failed to save lists:', error);
+      throw error;
     }
   }, []);
 
@@ -48,108 +51,159 @@ export function useLists() {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      const updated = [...lists, newList];
-      await saveLists(updated);
-      return newList;
+
+      try {
+        setLists((prev) => {
+          const updated = [...prev, newList];
+          saveLists(updated).catch((error) => {
+            console.error('Failed to create list:', error);
+          });
+          return updated;
+        });
+        return newList;
+      } catch (error) {
+        console.error('Error in createList:', error);
+        throw error;
+      }
     },
-    [lists, saveLists]
+    [saveLists]
   );
 
   // 리스트 아이템 추가
   const addListItem = useCallback(
     async (listId: string, itemTitle: string) => {
-      const updated = lists.map((list) => {
-        if (list.id === listId) {
-          const newItem: ListItem = {
-            id: `item_${Date.now()}`,
-            listId,
-            title: itemTitle,
-            completed: false,
-            createdAt: new Date().toISOString(),
-          };
-          return {
-            ...list,
-            items: [...list.items, newItem],
-            totalCount: list.totalCount + 1,
-            updatedAt: new Date().toISOString(),
-          };
-        }
-        return list;
-      });
-      await saveLists(updated);
+      try {
+        setLists((prev) => {
+          const updated = prev.map((list) => {
+            if (list.id === listId) {
+              const newItem: ListItem = {
+                id: `item_${Date.now()}`,
+                listId,
+                title: itemTitle,
+                completed: false,
+                createdAt: new Date().toISOString(),
+              };
+              return {
+                ...list,
+                items: [...list.items, newItem],
+                totalCount: list.totalCount + 1,
+                updatedAt: new Date().toISOString(),
+              };
+            }
+            return list;
+          });
+          saveLists(updated).catch((error) => {
+            console.error('Failed to add list item:', error);
+          });
+          return updated;
+        });
+      } catch (error) {
+        console.error('Error in addListItem:', error);
+        throw error;
+      }
     },
-    [lists, saveLists]
+    [saveLists]
   );
 
   // 리스트 아이템 토글 (완료/미완료)
   const toggleListItem = useCallback(
     async (listId: string, itemId: string) => {
-      const updated = lists.map((list) => {
-        if (list.id === listId) {
-          const updatedItems = list.items.map((item) => {
-            if (item.id === itemId) {
+      try {
+        setLists((prev) => {
+          const updated = prev.map((list) => {
+            if (list.id === listId) {
+              const updatedItems = list.items.map((item) => {
+                if (item.id === itemId) {
+                  return {
+                    ...item,
+                    completed: !item.completed,
+                    completedAt: !item.completed ? new Date().toISOString() : undefined,
+                  };
+                }
+                return item;
+              });
+
+              const completionCount = updatedItems.filter((i) => i.completed).length;
+              const isCompleted = completionCount === list.totalCount && list.totalCount > 0;
+
               return {
-                ...item,
-                completed: !item.completed,
-                completedAt: !item.completed ? new Date().toISOString() : undefined,
+                ...list,
+                items: updatedItems,
+                completionCount,
+                isCompleted,
+                completedAt: isCompleted ? new Date().toISOString() : list.completedAt,
+                updatedAt: new Date().toISOString(),
               };
             }
-            return item;
+            return list;
           });
-
-          const completionCount = updatedItems.filter((i) => i.completed).length;
-          const isCompleted = completionCount === list.totalCount && list.totalCount > 0;
-
-          return {
-            ...list,
-            items: updatedItems,
-            completionCount,
-            isCompleted,
-            completedAt: isCompleted ? new Date().toISOString() : list.completedAt,
-            updatedAt: new Date().toISOString(),
-          };
-        }
-        return list;
-      });
-      await saveLists(updated);
+          saveLists(updated).catch((error) => {
+            console.error('Failed to toggle list item:', error);
+          });
+          return updated;
+        });
+      } catch (error) {
+        console.error('Error in toggleListItem:', error);
+        throw error;
+      }
     },
-    [lists, saveLists]
+    [saveLists]
   );
 
   // 리스트 아이템 삭제
   const deleteListItem = useCallback(
     async (listId: string, itemId: string) => {
-      const updated = lists.map((list) => {
-        if (list.id === listId) {
-          const updatedItems = list.items.filter((i) => i.id !== itemId);
-          const wasCompleted = list.items.find((i) => i.id === itemId)?.completed ?? false;
-          const completionCount = wasCompleted ? list.completionCount - 1 : list.completionCount;
-          const totalCount = list.totalCount - 1;
-          const isCompleted = completionCount === totalCount && totalCount > 0;
+      try {
+        setLists((prev) => {
+          const updated = prev.map((list) => {
+            if (list.id === listId) {
+              const updatedItems = list.items.filter((i) => i.id !== itemId);
+              const wasCompleted = list.items.find((i) => i.id === itemId)?.completed ?? false;
+              const completionCount = wasCompleted ? list.completionCount - 1 : list.completionCount;
+              const totalCount = list.totalCount - 1;
+              const isCompleted = completionCount === totalCount && totalCount > 0;
 
-          return {
-            ...list,
-            items: updatedItems,
-            completionCount,
-            totalCount,
-            isCompleted,
-            updatedAt: new Date().toISOString(),
-          };
-        }
-        return list;
-      });
-      await saveLists(updated);
+              return {
+                ...list,
+                items: updatedItems,
+                completionCount,
+                totalCount,
+                isCompleted,
+                updatedAt: new Date().toISOString(),
+              };
+            }
+            return list;
+          });
+          saveLists(updated).catch((error) => {
+            console.error('Failed to delete list item:', error);
+          });
+          return updated;
+        });
+      } catch (error) {
+        console.error('Error in deleteListItem:', error);
+        throw error;
+      }
     },
-    [lists, saveLists]
+    [saveLists]
   );
 
   // 리스트 삭제
   const deleteList = useCallback(
     async (listId: string) => {
-      const updated = lists.filter((l) => l.id !== listId);
-      await saveLists(updated);
+      try {
+        setLists((prev) => {
+          const updated = prev.filter((l) => l.id !== listId);
+          saveLists(updated).catch((error) => {
+            console.error('Failed to delete list:', error);
+          });
+          return updated;
+        });
+      } catch (error) {
+        console.error('Error in deleteList:', error);
+        throw error;
+      }
     },
-    [lists, saveLists]
+    [saveLists]
   );
 
   // 리스트 조회
@@ -172,6 +226,11 @@ export function useLists() {
   useEffect(() => {
     loadLists();
   }, [loadLists]);
+
+  // 디버깅용: 리스트 상태 확인
+  useEffect(() => {
+    console.log('Lists state updated:', lists.length, 'lists');
+  }, [lists]);
 
   return {
     lists,

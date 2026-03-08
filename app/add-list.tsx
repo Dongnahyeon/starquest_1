@@ -41,8 +41,11 @@ export default function AddListScreen() {
 
     try {
       await createList(title.trim(), description.trim() || undefined, selectedCategoryId);
+      console.log('List created successfully');
+      setIsSaving(false);
       router.back();
     } catch (e) {
+      console.error('Error creating list:', e);
       setError('리스트 생성 중 오류가 발생했어요.');
       setIsSaving(false);
     }

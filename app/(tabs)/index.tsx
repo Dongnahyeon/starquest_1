@@ -29,6 +29,14 @@ export default function HomeScreen() {
   const [showIntro, setShowIntro] = useState(true);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
+  // 인트로 타임아웃 폴백 (5초 후 자동으로 인트로 종료)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowIntro(false);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Get categories that have achievements
   const activeCategories = categories.filter((cat) =>
     achievements.some((a) => a.categoryId === cat.id)
