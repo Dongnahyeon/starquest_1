@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Animated,
   Dimensions,
@@ -72,13 +72,22 @@ export default function HomeScreen() {
             <Text style={styles.headerTitle}>✦ StarQuest</Text>
             <Text style={styles.headerSubtitle}>나의 별자리 성취</Text>
           </View>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => router.push('/add' as any)}
-            activeOpacity={0.8}
-          >
-            <IconSymbol name="plus" size={22} color="#0A0E1A" />
-          </TouchableOpacity>
+          <View style={styles.headerButtons}>
+            <TouchableOpacity
+              style={styles.statsButton}
+              onPress={() => router.push('/stats' as any)}
+              activeOpacity={0.8}
+            >
+              <IconSymbol name="chart.bar" size={20} color="#F5C842" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => router.push('/add' as any)}
+              activeOpacity={0.8}
+            >
+              <IconSymbol name="plus" size={22} color="#0A0E1A" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Progress bar */}
@@ -274,6 +283,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#718096',
     marginTop: 2,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  statsButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#111827',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#1E2A3A',
   },
   addButton: {
     width: 44,
