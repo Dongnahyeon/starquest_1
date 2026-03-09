@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useAchievementsContext } from '@/lib/achievements-context';
 import { useListsContext } from '@/lib/lists-context';
+import { useGoogleDriveSync } from '@/hooks/use-google-drive-sync';
 
 interface GoogleUser {
   email: string;
@@ -32,6 +33,8 @@ export default function SettingsScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
   const [showGoogleSignIn, setShowGoogleSignIn] = useState(false);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const { saveToGoogleDrive, loadFromGoogleDrive } = useGoogleDriveSync();
 
   // Load Google Sign-In script
   useEffect(() => {
@@ -83,8 +86,13 @@ export default function SettingsScreen() {
       setIsLoggedIn(true);
       setShowGoogleSignIn(false);
       
+      // Extract access token from response if available
+      if (response.access_token) {
+        setAccessToken(response.access_token);
+      }
+      
       // Auto-sync to Google Drive
-      await syncToGoogleDrive(userData);
+      await syncToGoogleDrive(userData, response.access_token);
     } catch (error) {
       console.error('Google Sign-In error:', error);
       Alert.alert('로그인 실패', '구글 로그인 중 오류가 발생했습니다.');
@@ -93,23 +101,24 @@ export default function SettingsScreen() {
     }
   };
 
-  const syncToGoogleDrive = async (userData: any) => {
+  const syncToGoogleDrive = async (userData: any, token?: string) => {
     try {
       setIsLoading(true);
       
-      const dataToSync = {
-        achievements,
-        lists,
-        syncedAt: new Date().toISOString(),
-        userEmail: userData.email,
-      };
+      const tokenToUse = token || accessToken;
+      if (!tokenToUse) {
+        Alert.alert('오류', 'Access token을 가져올 수 없습니다.');
+        return;
+      }
 
-      // For now, just show success message
-      // Full Google Drive API integration requires backend server
-      console.log('Data to sync:', dataToSync);
+      const result = await saveToGoogleDrive(achievements, lists, userData.email);
       
-      setLastSyncTime(new Date().toLocaleString('ko-KR'));
-      Alert.alert('동기화 준비 완료', 'Google Drive 연동이 설정되었습니다.\n(전체 기능은 곧 추가됩니다)');
+      if (result.success) {
+        setLastSyncTime(new Date().toLocaleString('ko-KR'));
+        Alert.alert('동기화 완료', 'Google Drive에 데이터가 저장되었습니다.');
+      } else {
+        Alert.alert('동기화 실패', result.message);
+      }
     } catch (error) {
       console.error('Sync error:', error);
       Alert.alert('동기화 실패', '데이터 동기화 중 오류가 발생했습니다.');
@@ -122,6 +131,7 @@ export default function SettingsScreen() {
     setIsLoggedIn(false);
     setGoogleUser(null);
     setLastSyncTime(null);
+    setAccessToken(null);
     Alert.alert('로그아웃', 'Google 계정에서 로그아웃되었습니다.');
   };
 
@@ -131,7 +141,30 @@ export default function SettingsScreen() {
       return;
     }
 
-    await syncToGoogleDrive(googleUser);
+    await syncToGoogleDrive(googleUser, accessToken || undefined);
+  };
+
+  const handleRestoreFromGoogleDrive = async () => {
+    if (!isLoggedIn || !accessToken) {
+      Alert.alert('로그인 필요', '먼저 Google 계정으로 로그인해주세요.');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const result = await loadFromGoogleDrive(accessToken);
+      
+      if (result.success && result.data) {
+        Alert.alert(
+          '복구 완료',
+          `${result.data.achievements.length}개의 별과 ${result.data.lists.length}개의 리스트가 복구되었습니다.\n\n앱을 재시작하면 데이터가 적용됩니다.`
+        );
+      } else {
+        Alert.alert('복구 실패', result.message);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -190,20 +223,36 @@ export default function SettingsScreen() {
           )}
 
           {isLoggedIn && (
-            <TouchableOpacity
-              style={styles.syncButton}
-              onPress={handleManualSync}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <>
-                  <IconSymbol name="arrow.clockwise" size={18} color="#FFF" />
-                  <Text style={styles.syncButtonText}>지금 동기화</Text>
-                </>
-              )}
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity
+                style={styles.syncButton}
+                onPress={handleManualSync}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <>
+                    <IconSymbol name="arrow.clockwise" size={18} color="#FFF" />
+                    <Text style={styles.syncButtonText}>지금 동기화</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.restoreButton}
+                onPress={handleRestoreFromGoogleDrive}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <>
+                    <IconSymbol name="arrow.down.circle" size={18} color="#FFF" />
+                    <Text style={styles.restoreButtonText}>Google Drive에서 복구</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </>
           )}
         </View>
 
@@ -413,6 +462,22 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   syncButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFF',
+  },
+  restoreButton: {
+    flexDirection: 'row',
+    backgroundColor: '#3B82F6',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 8,
+  },
+  restoreButtonText: {
     fontSize: 14,
     fontWeight: '600',
     color: '#FFF',

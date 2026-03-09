@@ -58,7 +58,8 @@
 - [x] @react-oauth/google 라이브러리 설치
 - [x] 설정 탭 추가 (탭 바에 세 번째 탭)
 - [x] Google Sign-In 로그인 버튼 구현
-- [ ] Google Drive API 데이터 동기화 로직 구현
-- [ ] 자동 동기화 기능 구현
+- [x] Google Drive API 데이터 동기화 로직 구현
+- [x] "지금 동기화" 버튼 추가
+- [x] "Google Drive에서 복구" 버튼 추가
 - [ ] 배포 및 테스트
 - [ ] 최종 검증
