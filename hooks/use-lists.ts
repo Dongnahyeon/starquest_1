@@ -83,6 +83,7 @@ export function useLists() {
                 completed: false,
                 createdAt: new Date().toISOString(),
               };
+              console.log(`[LOG] 리스트 항목 생성: "${itemTitle}" at ${newItem.createdAt}`);
               return {
                 ...list,
                 items: [...list.items, newItem],
@@ -105,19 +106,25 @@ export function useLists() {
     [saveLists]
   );
 
-  // 리스트 아이템 토글 (완료/미완료)
+  // 리스트 아이템 토글 (완료/미완료) - 메모 저장 기능 추가
   const toggleListItem = useCallback(
-    async (listId: string, itemId: string) => {
+    async (listId: string, itemId: string, completionNote?: string) => {
       try {
         setLists((prev) => {
           const updated = prev.map((list) => {
             if (list.id === listId) {
               const updatedItems = list.items.map((item) => {
                 if (item.id === itemId) {
+                  const isCompleting = !item.completed;
+                  const completedAt = isCompleting ? new Date().toISOString() : undefined;
+                  if (isCompleting) {
+                    console.log(`[LOG] 리스트 항목 완수: "${item.title}" at ${completedAt}${completionNote ? ` (메모: ${completionNote})` : ''}`);
+                  }
                   return {
                     ...item,
-                    completed: !item.completed,
-                    completedAt: !item.completed ? new Date().toISOString() : undefined,
+                    completed: isCompleting,
+                    completedAt,
+                    completionNote: isCompleting ? completionNote : undefined,
                   };
                 }
                 return item;

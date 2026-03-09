@@ -7,7 +7,7 @@ interface ListsContextType {
   isLoading: boolean;
   createList: (title: string, description: string | undefined, categoryId: string) => Promise<List>;
   addListItem: (listId: string, itemTitle: string) => Promise<void>;
-  toggleListItem: (listId: string, itemId: string) => Promise<void>;
+  toggleListItem: (listId: string, itemId: string, completionNote?: string) => Promise<void>;
   deleteListItem: (listId: string, itemId: string) => Promise<void>;
   deleteList: (listId: string) => Promise<void>;
   getListById: (listId: string) => List | undefined;

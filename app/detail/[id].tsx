@@ -101,8 +101,15 @@ export default function DetailScreen() {
           style: 'destructive',
           onPress: async () => {
             if (achievement) {
-              await deleteAchievement(achievement.id);
-              router.back();
+              try {
+                await deleteAchievement(achievement.id);
+                setTimeout(() => {
+                  router.back();
+                }, 100);
+              } catch (error) {
+                console.error('Delete error:', error);
+                Alert.alert('오류', '별 삭제에 실패했습니다.');
+              }
             }
           },
         },

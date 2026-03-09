@@ -32,6 +32,9 @@ export default function ListDetailScreen() {
 
   const [newItemTitle, setNewItemTitle] = useState('');
   const [isAddingItem, setIsAddingItem] = useState(false);
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [noteText, setNoteText] = useState('');
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   const starScale = useRef(new Animated.Value(1)).current;
   const starGlow = useRef(new Animated.Value(0)).current;
@@ -66,11 +69,23 @@ export default function ListDetailScreen() {
 
   const handleToggleItem = async (itemId: string) => {
     if (!list) return;
+    
+    const item = list.items.find(i => i.id === itemId);
+    if (!item) return;
+    
+    // 완료 상태로 변경할 때만 메모 입력 모달 표시
+    if (!item.completed) {
+      setSelectedItemId(itemId);
+      setNoteText('');
+      setShowNoteModal(true);
+      return;
+    }
+    
+    // 미완료 상태로 변경
     if (Platform.OS !== 'web') {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
 
-    // Star burst animation
     Animated.sequence([
       Animated.spring(starScale, {
         toValue: 1.3,
@@ -87,6 +102,34 @@ export default function ListDetailScreen() {
     ]).start();
 
     await toggleListItem(list.id, itemId);
+  };
+  
+  const handleSaveNote = async () => {
+    if (!list || !selectedItemId) return;
+    
+    if (Platform.OS !== 'web') {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+
+    Animated.sequence([
+      Animated.spring(starScale, {
+        toValue: 1.3,
+        friction: 3,
+        tension: 120,
+        useNativeDriver: true,
+      }),
+      Animated.spring(starScale, {
+        toValue: 1,
+        friction: 5,
+        tension: 80,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    
+    await toggleListItem(list.id, selectedItemId, noteText);
+    setShowNoteModal(false);
+    setSelectedItemId(null);
+    setNoteText('');
   };
 
   const handleDeleteItem = (itemId: string) => {
@@ -115,8 +158,15 @@ export default function ListDetailScreen() {
           style: 'destructive',
           onPress: async () => {
             if (list) {
-              await deleteList(list.id);
-              router.back();
+              try {
+                await deleteList(list.id);
+                setTimeout(() => {
+                  router.back();
+                }, 100);
+              } catch (error) {
+                console.error('Delete error:', error);
+                Alert.alert('오류', '리스트 삭제에 실패했습니다.');
+              }
             }
           },
         },
@@ -353,6 +403,46 @@ export default function ListDetailScreen() {
         {/* Bottom padding */}
         <View style={{ height: insets.bottom + 40 }} />
       </ScrollView>
+      
+      {/* Note Modal */}
+      {showNoteModal && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>완료 메모</Text>
+            <Text style={styles.modalSubtitle}>이 항목을 완료한 후 메모를 남겨보세요</Text>
+            
+            <TextInput
+              style={styles.noteInput}
+              placeholder="메모를 입력하세요 (선택사항)"
+              placeholderTextColor="#718096"
+              value={noteText}
+              onChangeText={setNoteText}
+              multiline
+              numberOfLines={4}
+            />
+            
+            <View style={styles.modalButtonRow}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setShowNoteModal(false);
+                  setSelectedItemId(null);
+                  setNoteText('');
+                }}
+              >
+                <Text style={styles.modalCancelButtonText}>취소</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.modalSaveButton}
+                onPress={handleSaveNote}
+              >
+                <Text style={styles.modalSaveButtonText}>완료</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -623,5 +713,74 @@ const styles = StyleSheet.create({
   notFoundText: {
     fontSize: 16,
     color: '#718096',
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'flex-end',
+    zIndex: 1000,
+  },
+  modalContent: {
+    backgroundColor: '#1A1F26',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 32,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#E2E8F0',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#718096',
+    marginBottom: 16,
+  },
+  noteInput: {
+    backgroundColor: '#111827',
+    borderWidth: 1,
+    borderColor: '#1E2A3A',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    color: '#E2E8F0',
+    fontSize: 15,
+    marginBottom: 20,
+    textAlignVertical: 'top',
+  },
+  modalButtonRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalCancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: '#2D3748',
+    alignItems: 'center',
+  },
+  modalCancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#E2E8F0',
+  },
+  modalSaveButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: '#4ECDC4',
+    alignItems: 'center',
+  },
+  modalSaveButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0A0E1A',
   },
 });
