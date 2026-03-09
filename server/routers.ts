@@ -9,66 +9,7 @@ import { syncRouter } from "./routers-sync";
 export const appRouter = router({
   system: systemRouter,
   sync: syncRouter,
-  auth: router({
-    me: publicProcedure.query((opts) => opts.ctx.user),
-    logout: publicProcedure.mutation(({ ctx }) => {
-      const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return {
-        success: true,
-      } as const;
-    }),
-    login: publicProcedure
-      .input(
-        z.object({
-          email: z.string().email(),
-          password: z.string().min(6),
-        })
-      )
-      .mutation(async ({ input, ctx }) => {
-        // 간단한 테스트 로그인 (실제로는 데이터베이스에서 확인)
-        if (input.email === 'test@example.com' && input.password === 'password123') {
-          const user = {
-            id: 'test-user-1',
-            email: input.email,
-            name: 'Test User',
-            openId: 'test-openid',
-            loginMethod: 'email' as const,
-            lastSignedIn: new Date(),
-          };
-          
-          const cookieOptions = getSessionCookieOptions(ctx.req);
-          ctx.res.cookie(COOKIE_NAME, JSON.stringify(user), cookieOptions);
-          
-          return { success: true, user };
-        }
-        throw new Error('Invalid email or password');
-      }),
-    signup: publicProcedure
-      .input(
-        z.object({
-          email: z.string().email(),
-          password: z.string().min(6),
-          name: z.string().min(1),
-        })
-      )
-      .mutation(async ({ input, ctx }) => {
-        // 간단한 테스트 회원가입 (실제로는 데이터베이스에 저장)
-        const user = {
-          id: `user-${Date.now()}`,
-          email: input.email,
-          name: input.name,
-          openId: `openid-${Date.now()}`,
-          loginMethod: 'email' as const,
-          lastSignedIn: new Date(),
-        };
-        
-        const cookieOptions = getSessionCookieOptions(ctx.req);
-        ctx.res.cookie(COOKIE_NAME, JSON.stringify(user), cookieOptions);
-        
-        return { success: true, user };
-      }),
-  }),
+  // 로그인 기능은 제거되었습니다. iCloud 백업만 사용합니다.
 
   ai: router({
     classifyAchievement: publicProcedure
