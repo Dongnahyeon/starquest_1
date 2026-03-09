@@ -397,14 +397,10 @@ async function startServer() {
     }),
   );
 
-  // Serve web app for all non-API routes
-  app.get("*", (req, res) => {
-    if (req.path.startsWith("/api")) {
-      res.status(404).json({ error: "Not found" });
-    } else {
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.send(getWebAppHTML());
-    }
+  // Serve web app for ALL routes (including root and any path)
+  app.use((req, res) => {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(getWebAppHTML());
   });
 
   console.log('[web] Server initialized - ready to serve');
