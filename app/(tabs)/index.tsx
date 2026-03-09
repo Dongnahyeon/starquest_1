@@ -65,7 +65,7 @@ export default function HomeScreen() {
         <View style={[styles.nebula, styles.nebula2]} />
       </View>
 
-      <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
+      <ScrollView style={[styles.container, { paddingTop: insets.top + 8 }]} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <View>
@@ -173,7 +173,7 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.listsScroll}>
-              {lists.map((list) => {
+              {lists.slice(0, 6).map((list) => {
                 const completionPercent = list.totalCount > 0 ? Math.round((list.completionCount / list.totalCount) * 100) : 0;
                 return (
                   <TouchableOpacity
@@ -223,7 +223,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         )}
-      </View>
+      </ScrollView>
     </View>
   );
 }
