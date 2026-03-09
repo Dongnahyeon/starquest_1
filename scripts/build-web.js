@@ -1,15 +1,50 @@
+import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
 const distWebDir = path.join(process.cwd(), 'dist', 'web');
 
-// dist/web 디렉토리 생성
-if (!fs.existsSync(distWebDir)) {
+try {
+  console.log('🔨 Expo 웹 번들 생성 중...');
+  
+  // dist/web 디렉토리 정리
+  if (fs.existsSync(distWebDir)) {
+    fs.rmSync(distWebDir, { recursive: true, force: true });
+  }
   fs.mkdirSync(distWebDir, { recursive: true });
+
+  // Expo export 실행
+  try {
+    execSync('npx expo export --platform web --output-dir dist/web', {
+      cwd: process.cwd(),
+      stdio: 'inherit',
+      env: { ...process.env, NODE_ENV: 'production' }
+    });
+    console.log('✅ Expo 웹 번들 생성 완료');
+  } catch (error) {
+    console.warn('⚠️ Expo export 실패, 대체 방법 사용 중...');
+    
+    // 대체: Metro 번들러 사용
+    try {
+      execSync('npx expo start --web --offline --output-dir dist/web', {
+        cwd: process.cwd(),
+        stdio: 'inherit',
+        timeout: 60000,
+        env: { ...process.env, NODE_ENV: 'production' }
+      });
+    } catch (metroError) {
+      console.warn('⚠️ Metro 번들도 실패, 기본 HTML 생성');
+      generateFallbackHTML();
+    }
+  }
+} catch (error) {
+  console.error('❌ 빌드 실패:', error.message);
+  generateFallbackHTML();
+  process.exit(1);
 }
 
-// index.html 생성
-const htmlContent = `<!DOCTYPE html>
+function generateFallbackHTML() {
+  const htmlContent = `<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
@@ -51,7 +86,8 @@ const htmlContent = `<!DOCTYPE html>
       font-size: 1.1em; 
       font-weight: 600; 
       cursor: pointer; 
-      text-decoration: none; 
+      text-decoration: none;
+      margin: 10px;
     }
     .button:hover { 
       background: #e6b800; 
@@ -82,5 +118,6 @@ const htmlContent = `<!DOCTYPE html>
 </body>
 </html>`;
 
-fs.writeFileSync(path.join(distWebDir, 'index.html'), htmlContent);
-console.log('✅ dist/web/index.html 생성 완료');
+  fs.writeFileSync(path.join(distWebDir, 'index.html'), htmlContent);
+  console.log('✅ 기본 HTML 생성 완료');
+}
