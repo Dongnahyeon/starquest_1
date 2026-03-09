@@ -7,7 +7,7 @@
     "dev": "concurrently -k \"pnpm dev:server\" \"pnpm dev:metro\"",
     "dev:server": "cross-env NODE_ENV=development tsx watch server/_core/index.ts",
     "dev:metro": "cross-env EXPO_USE_METRO_WORKSPACE_ROOT=1 npx expo start --web --port ${EXPO_PORT:-8081}",
-    "build": "npm run build:web && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "build": "esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && npm run build:web",
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc --noEmit",
     "lint": "expo lint",
@@ -17,7 +17,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "qr": "node scripts/generate_qr.mjs",
-    "build:web": "mkdir -p dist/web && echo '<html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"><title>StarQuest</title></head><body>Loading...</body></html>' > dist/web/index.html"
+    "build:web": "expo export --platform web --output-dir dist/web 2>/dev/null || (mkdir -p dist/web && echo '<html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"><title>StarQuest</title></head><body><div id=\"root\"></div><script src=\"/_expo/static/js/index.js\"></script></body></html>' > dist/web/index.html)"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
