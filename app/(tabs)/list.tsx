@@ -160,9 +160,10 @@ export default function ListScreen() {
 
   return (
     <ScreenContainer className="bg-background">
-      {/* Tab selector */}
-      <View style={styles.tabSelector}>
-        <TouchableOpacity
+      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        {/* Tab selector */}
+        <View style={styles.tabSelector}>
+          <TouchableOpacity
           style={[styles.tab, selectedTab === 'achievements' && styles.tabActive]}
           onPress={() => setSelectedTab('achievements')}
         >
@@ -268,6 +269,7 @@ export default function ListScreen() {
           )}
         </View>
       )}
+      </ScrollView>
 
       {/* FAB for adding */}
       <TouchableOpacity
@@ -287,6 +289,9 @@ export default function ListScreen() {
 }
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flex: 1,
+  },
   tabSelector: {
     flexDirection: 'row',
     paddingHorizontal: 16,
