@@ -23,6 +23,7 @@ import { ListsProvider } from "@/lib/lists-context";
 import { useAutoSync } from "@/hooks/use-auto-sync";
 import { useSyncData } from "@/hooks/use-sync-data";
 import { useDownloadSync } from "@/hooks/use-download-sync";
+import { useICloudAutoRestore } from "@/hooks/use-icloud-auto-restore";
 
 const DEFAULT_WEB_INSETS: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const DEFAULT_WEB_FRAME: Rect = { x: 0, y: 0, width: 0, height: 0 };
@@ -88,6 +89,9 @@ export default function RootLayout() {
   useAutoSync();
   useSyncData();
   useDownloadSync();
+  
+  // Auto-restore from iCloud on app start
+  useICloudAutoRestore();
 
   const content = (
     <GestureHandlerRootView style={{ flex: 1 }}>

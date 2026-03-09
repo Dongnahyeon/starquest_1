@@ -6,6 +6,7 @@ import { useColors } from '@/hooks/use-colors';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { trpc } from '@/lib/trpc';
 import { useRouter } from 'expo-router';
+import { useICloudSync } from '@/hooks/use-icloud-sync';
 
 export default function SettingsScreen() {
   const { isAuthenticated, user, logout, loading, refresh } = useAuth();
@@ -14,9 +15,49 @@ export default function SettingsScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const { saveToICloud, restoreFromICloud, isSyncing, lastSyncTime, syncError } = useICloudSync();
 
   const loginMutation = trpc.auth.login.useMutation();
   const signupMutation = trpc.auth.signup.useMutation();
+
+  const handleSaveToICloud = async () => {
+    try {
+      const success = await saveToICloud();
+      if (success) {
+        Alert.alert('성공', 'iCloud에 데이터가 저장되었습니다!');
+      } else {
+        Alert.alert('오류', 'iCloud 저장에 실패했습니다');
+      }
+    } catch (error) {
+      Alert.alert('오류', error instanceof Error ? error.message : '알 수 없는 오류');
+    }
+  };
+
+  const handleRestoreFromICloud = async () => {
+    Alert.alert(
+      '복구 확인',
+      'iCloud에서 데이터를 복구하시겠습니까? 기존 로컬 데이터와 병합됩니다.',
+      [
+        { text: '취소', onPress: () => {}, style: 'cancel' },
+        {
+          text: '복구',
+          onPress: async () => {
+            try {
+              const success = await restoreFromICloud();
+              if (success) {
+                Alert.alert('성공', 'iCloud에서 데이터가 복구되었습니다!');
+              } else {
+                Alert.alert('오류', 'iCloud 복구에 실패했습니다');
+              }
+            } catch (error) {
+              Alert.alert('오류', error instanceof Error ? error.message : '알 수 없는 오류');
+            }
+          },
+          style: 'default',
+        },
+      ]
+    );
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -151,6 +192,41 @@ export default function SettingsScreen() {
                   💡 테스트 계정: test@example.com / password123
                 </Text>
               </View>
+            )}
+          </View>
+
+          {/* iCloud Backup Section */}
+          <View style={[styles.section, { borderColor: colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>☁️ iCloud 백업</Text>
+            
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: colors.primary }]}
+              onPress={handleSaveToICloud}
+              disabled={isSyncing}
+            >
+              <IconSymbol name="arrow.up.circle" size={20} color="#fff" />
+              <Text style={styles.buttonText}>{isSyncing ? '저장 중...' : 'iCloud에 저장'}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: colors.primary }]}
+              onPress={handleRestoreFromICloud}
+              disabled={isSyncing}
+            >
+              <IconSymbol name="arrow.down.circle" size={20} color="#fff" />
+              <Text style={styles.buttonText}>{isSyncing ? '복구 중...' : 'iCloud에서 복구'}</Text>
+            </TouchableOpacity>
+
+            {lastSyncTime && (
+              <Text style={[styles.note, { color: colors.muted }]}>
+                마지막 동기화: {lastSyncTime.toLocaleString('ko-KR')}
+              </Text>
+            )}
+
+            {syncError && (
+              <Text style={[styles.note, { color: colors.error }]}>
+                오류: {syncError}
+              </Text>
             )}
           </View>
 
