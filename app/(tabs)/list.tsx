@@ -229,7 +229,7 @@ export default function ListScreen() {
               data={filteredAchievements}
               keyExtractor={(item) => item.id}
               renderItem={renderAchievementItem}
-              scrollEnabled={false}
+              scrollEnabled={true}
               contentContainerStyle={styles.listContent}
             />
           ) : (
@@ -248,7 +248,7 @@ export default function ListScreen() {
               data={lists}
               keyExtractor={(item) => item.id}
               renderItem={renderListItem}
-              scrollEnabled={false}
+              scrollEnabled={true}
               contentContainerStyle={styles.listContent}
               numColumns={2}
               columnWrapperStyle={styles.listGrid}

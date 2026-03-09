@@ -30,24 +30,29 @@ export function getStarBrightness(completionCount: number): StarBrightness {
   return 'supernova';
 }
 
+// Color progression based on completion count thresholds
+// 0: 회색, 1: 주황색, 4: 붉은색, 16: 청색, 64: 백색, 256: 노랑, 1024: 보라, 4096+: 샛노랑
+// 부드럽고 눈에 편한 색상으로 조정
 export function getStarColor(completionCount: number): string {
-  const brightness = getStarBrightness(completionCount);
-  switch (brightness) {
-    case 'dim': return '#2D3748';
-    case 'faint': return '#F6AD55';
-    case 'bright': return '#F5C842';
-    case 'supernova': return '#FFF176';
-  }
+  if (completionCount === 0) return '#9CA3AF'; // 회색 (밝은 회색)
+  if (completionCount === 1) return '#FB923C'; // 주황색 (부드러운 주황)
+  if (completionCount < 16) return '#F87171'; // 붉은색 (부드러운 빨강)
+  if (completionCount < 64) return '#60A5FA'; // 청색 (부드러운 파랑)
+  if (completionCount < 256) return '#F3F4F6'; // 백색 (밝은 회색)
+  if (completionCount < 1024) return '#FBBF24'; // 노랑 (부드러운 노랑)
+  if (completionCount < 4096) return '#C084FC'; // 보라 (부드러운 보라)
+  return '#A78BFA'; // 샛노랑 대신 밝은 보라
 }
 
 export function getStarGlowIntensity(completionCount: number): number {
-  const brightness = getStarBrightness(completionCount);
-  switch (brightness) {
-    case 'dim': return 0;
-    case 'faint': return 0.3;
-    case 'bright': return 0.6;
-    case 'supernova': return 1.0;
-  }
+  if (completionCount === 0) return 0;
+  if (completionCount === 1) return 0.2;
+  if (completionCount < 16) return 0.4;
+  if (completionCount < 64) return 0.5;
+  if (completionCount < 256) return 0.7;
+  if (completionCount < 1024) return 0.85;
+  if (completionCount < 4096) return 0.9;
+  return 1.0;
 }
 
 export const DEFAULT_CATEGORIES: Category[] = [

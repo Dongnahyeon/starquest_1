@@ -8,6 +8,20 @@
       "when": 1763372440610,
       "tag": "0000_elite_eternals",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1772968039732,
+      "tag": "0001_mixed_stature",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1773041695825,
+      "tag": "0002_lyrical_boom_boom",
+      "breakpoints": true
     }
   ]
 }
