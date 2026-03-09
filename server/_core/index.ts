@@ -66,7 +66,11 @@ async function startServer() {
     ? '/opt/render/project/src/dist/web'
     : 'dist/web';
   
-  app.use(express.static(webPath));
+  try {
+    app.use(express.static(webPath));
+  } catch (e) {
+    console.log('[web] Static files not available, using fallback');
+  }
 
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, timestamp: Date.now() });
@@ -86,10 +90,42 @@ async function startServer() {
       const indexPath = process.env.NODE_ENV === 'production'
         ? '/opt/render/project/src/dist/web/index.html'
         : 'dist/web/index.html';
-      res.sendFile(indexPath);
+      
+      try {
+        res.sendFile(indexPath);
+      } catch (e) {
+        // Fallback: serve a simple HTML page
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.send(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>StarQuest</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #0a0e1a; color: #e2e8f0; margin: 0; padding: 20px; }
+              .container { max-width: 600px; margin: 0 auto; text-align: center; }
+              h1 { font-size: 2.5em; margin: 20px 0; }
+              p { font-size: 1.1em; margin: 10px 0; }
+              a { color: #f5c842; text-decoration: none; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>⭐ StarQuest</h1>
+              <p>별자리처럼 성취를 기록하고 추적하세요</p>
+              <p style="margin-top: 40px; color: #718096;">앱을 로드하는 중입니다...</p>
+              <p><a href="/">새로고침</a></p>
+            </div>
+          </body>
+          </html>
+        `);
+      }
     }
   });
 
+  console.log('[web] Server initialized - ready to serve');
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);
 
