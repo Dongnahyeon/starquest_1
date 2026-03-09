@@ -49,3 +49,16 @@
 
 - [x] 카테고리 내 별이 많을 때 목록 스크롤 기능 추가
 - [x] 별의 밝기 색상 단계 구현 (회색 > 주황 > 빨강 > 파랑 > 흰색 > 노랑 > 보라 > 샛노랑)
+
+## Google Drive 동기화 기능
+
+- [x] Google Cloud Console 프로젝트 생성
+- [x] OAuth 2.0 클라이언트 ID 생성
+- [x] VITE_GOOGLE_CLIENT_ID 환경 변수 설정
+- [x] @react-oauth/google 라이브러리 설치
+- [x] 설정 탭 추가 (탭 바에 세 번째 탭)
+- [x] Google Sign-In 로그인 버튼 구현
+- [ ] Google Drive API 데이터 동기화 로직 구현
+- [ ] 자동 동기화 기능 구현
+- [ ] 배포 및 테스트
+- [ ] 최종 검증
