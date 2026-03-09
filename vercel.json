@@ -1,5 +1,4 @@
 {
   "buildCommand": "pnpm run build:web",
-  "outputDirectory": "dist/web",
-  "framework": "expo"
+  "outputDirectory": "dist/web"
 }
