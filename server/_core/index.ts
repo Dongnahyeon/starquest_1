@@ -1,11 +1,16 @@
 import "dotenv/config";
 import express from "express";
+import path from "path";
 import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -57,7 +62,11 @@ async function startServer() {
   registerOAuthRoutes(app);
 
   // Serve static web client files
-  app.use(express.static("dist/web"));
+  const webPath = process.env.NODE_ENV === 'production' 
+    ? '/opt/render/project/src/dist/web'
+    : 'dist/web';
+  
+  app.use(express.static(webPath));
 
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, timestamp: Date.now() });
@@ -74,7 +83,10 @@ async function startServer() {
   // SPA fallback: serve index.html for all non-API routes
   app.get("*", (req, res) => {
     if (!req.path.startsWith("/api")) {
-      res.sendFile("dist/web/index.html", { root: process.cwd() });
+      const indexPath = process.env.NODE_ENV === 'production'
+        ? '/opt/render/project/src/dist/web/index.html'
+        : 'dist/web/index.html';
+      res.sendFile(indexPath);
     }
   });
 
