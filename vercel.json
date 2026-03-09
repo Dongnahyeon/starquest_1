@@ -1,14 +1,23 @@
 {
-  "buildCommand": "pnpm install && pnpm build",
+  "version": 2,
+  "buildCommand": "pnpm build",
   "outputDirectory": "dist",
   "installCommand": "npm install -g pnpm && pnpm install",
-  "env": {
-    "NODE_ENV": "production"
+  "framework": null,
+  "functions": {
+    "api/**": {
+      "runtime": "nodejs20.x"
+    }
   },
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/index.js"
+      "dest": "/index.js",
+      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+    },
+    {
+      "src": "/web/(.*)",
+      "dest": "/web/$1"
     },
     {
       "src": "/(.*)",
