@@ -3,8 +3,8 @@ services:
     name: starquest-server
     env: node
     plan: free
-    buildCommand: npm install && npm run build
-    startCommand: node dist/index.js
+    buildCommand: npm install && npx esbuild web-server-standalone.ts --platform=node --bundle --format=esm --outdir=dist-web
+    startCommand: node dist-web/web-server-standalone.js
     envVars:
       - key: NODE_ENV
         value: production
