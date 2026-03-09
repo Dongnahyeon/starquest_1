@@ -58,7 +58,6 @@ export function useAchievements() {
         completionCount: 0,
         createdAt: new Date().toISOString(),
         completionHistory: [],
-        completionNotes: {},
       };
       const newData = {
         ...data,
@@ -71,9 +70,8 @@ export function useAchievements() {
   );
 
   const completeAchievement = useCallback(
-    async (id: string, note?: string) => {
+    async (id: string) => {
       const now = new Date().toISOString();
-      const dateKey = now.split('T')[0]; // YYYY-MM-DD format
       const newData = {
         ...data,
         achievements: data.achievements.map((a) =>
@@ -83,10 +81,6 @@ export function useAchievements() {
                 completionCount: a.completionCount + 1,
                 lastCompletedAt: now,
                 completionHistory: [...a.completionHistory, now],
-                completionNotes: {
-                  ...(a.completionNotes || {}),
-                  ...(note ? { [dateKey]: note } : {}),
-                },
               }
             : a
         ),
@@ -100,26 +94,19 @@ export function useAchievements() {
     async (id: string) => {
       const newData = {
         ...data,
-        achievements: data.achievements.map((a) => {
-          if (a.id === id && a.completionCount > 0) {
-            const lastDate = a.completionHistory[a.completionHistory.length - 1];
-            const dateKey = lastDate.split('T')[0];
-            const newNotes = { ...(a.completionNotes || {}) };
-            delete newNotes[dateKey];
-            
-            return {
-              ...a,
-              completionCount: a.completionCount - 1,
-              completionHistory: a.completionHistory.slice(0, -1),
-              completionNotes: newNotes,
-              lastCompletedAt:
-                a.completionHistory.length > 1
-                  ? a.completionHistory[a.completionHistory.length - 2]
-                  : undefined,
-            };
-          }
-          return a;
-        }),
+        achievements: data.achievements.map((a) =>
+          a.id === id && a.completionCount > 0
+            ? {
+                ...a,
+                completionCount: a.completionCount - 1,
+                completionHistory: a.completionHistory.slice(0, -1),
+                lastCompletedAt:
+                  a.completionHistory.length > 1
+                    ? a.completionHistory[a.completionHistory.length - 2]
+                    : undefined,
+              }
+            : a
+        ),
       };
       await saveData(newData);
     },

@@ -14,7 +14,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { CompletionNoteModal } from '@/components/CompletionNoteModal';
 import { useAchievementsContext } from '@/lib/achievements-context';
 import { getStarBrightness, getStarColor, getStarGlowIntensity } from '@/types/achievement';
 
@@ -38,7 +37,6 @@ export default function DetailScreen() {
   const starScale = useRef(new Animated.Value(1)).current;
   const starGlow = useRef(new Animated.Value(0)).current;
   const [isAnimating, setIsAnimating] = useState(false);
-  const [showNoteModal, setShowNoteModal] = useState(false);
 
   useEffect(() => {
     if (achievement) {
@@ -52,15 +50,7 @@ export default function DetailScreen() {
 
   const handleComplete = async () => {
     if (!achievement || isAnimating) return;
-    
-    // Show note modal instead of completing directly
-    setShowNoteModal(true);
-  };
-
-  const handleNoteSubmit = async (note: string) => {
-    if (!achievement || isAnimating) return;
     setIsAnimating(true);
-    setShowNoteModal(false);
 
     if (Platform.OS !== 'web') {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -89,7 +79,7 @@ export default function DetailScreen() {
       }),
     ]).start(() => setIsAnimating(false));
 
-    await completeAchievement(achievement.id, note || undefined);
+    await completeAchievement(achievement.id);
   };
 
   const handleUncomplete = async () => {
@@ -280,34 +270,18 @@ export default function DetailScreen() {
               .slice()
               .reverse()
               .slice(0, 10)
-              .map((date, i) => {
-                const dateKey = date.split('T')[0];
-                const note = achievement.completionNotes?.[dateKey];
-                return (
-                  <View key={i} style={styles.historyItem}>
-                    <View style={[styles.historyDot, { backgroundColor: starColor }]} />
-                    <View style={styles.historyContent}>
-                      <Text style={styles.historyDate}>{formatFullDate(date)}</Text>
-                      {note && <Text style={styles.historyNote}>{note}</Text>}
-                    </View>
-                  </View>
-                );
-              })}
+              .map((date, i) => (
+                <View key={i} style={styles.historyItem}>
+                  <View style={[styles.historyDot, { backgroundColor: starColor }]} />
+                  <Text style={styles.historyDate}>{formatFullDate(date)}</Text>
+                </View>
+              ))}
           </View>
         )}
 
         {/* Bottom padding */}
         <View style={{ height: insets.bottom + 40 }} />
       </ScrollView>
-
-      {/* Note modal */}
-      <CompletionNoteModal
-        visible={showNoteModal}
-        onClose={() => setShowNoteModal(false)}
-        onSubmit={handleNoteSubmit}
-        achievementTitle={achievement.title}
-        starColor={starColor}
-      />
     </View>
   );
 }
@@ -515,7 +489,7 @@ const styles = StyleSheet.create({
   },
   historyItem: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     paddingVertical: 8,
     gap: 10,
     borderBottomWidth: 1,
@@ -525,21 +499,10 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginTop: 4,
-  },
-  historyContent: {
-    flex: 1,
   },
   historyDate: {
     fontSize: 13,
     color: '#A0AEC0',
-    marginBottom: 2,
-  },
-  historyNote: {
-    fontSize: 12,
-    color: '#718096',
-    marginTop: 2,
-    fontStyle: 'italic',
   },
   notFound: {
     flex: 1,

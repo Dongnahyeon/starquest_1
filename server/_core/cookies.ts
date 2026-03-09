@@ -49,16 +49,12 @@ export function getSessionCookieOptions(
 ): Pick<CookieOptions, "domain" | "httpOnly" | "path" | "sameSite" | "secure"> {
   const hostname = req.hostname;
   const domain = getParentDomain(hostname);
-  // In production (Render), always use secure cookies
-  const isSecure = isSecureRequest(req) || process.env.NODE_ENV === 'production';
 
   return {
     domain,
     httpOnly: true,
     path: "/",
-    // Use 'none' to allow cross-site requests (PWA, different domains)
-    // This is safe because we have httpOnly and secure flags
     sameSite: "none",
-    secure: isSecure,
+    secure: isSecureRequest(req),
   };
 }

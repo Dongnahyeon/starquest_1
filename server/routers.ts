@@ -4,12 +4,19 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { invokeLLM } from "./_core/llm";
-import { syncRouter } from "./routers-sync";
 
 export const appRouter = router({
   system: systemRouter,
-  sync: syncRouter,
-  // 로그인 기능은 제거되었습니다. iCloud 백업만 사용합니다.
+  auth: router({
+    me: publicProcedure.query((opts) => opts.ctx.user),
+    logout: publicProcedure.mutation(({ ctx }) => {
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      return {
+        success: true,
+      } as const;
+    }),
+  }),
 
   ai: router({
     classifyAchievement: publicProcedure

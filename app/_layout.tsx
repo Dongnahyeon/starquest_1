@@ -19,13 +19,13 @@ import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
 import { AchievementsProvider } from "@/lib/achievements-context";
-import { ListsProvider } from "@/lib/lists-context";
-import { useICloudAutoRestore } from "@/hooks/use-icloud-auto-restore";
 
 const DEFAULT_WEB_INSETS: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const DEFAULT_WEB_FRAME: Rect = { x: 0, y: 0, width: 0, height: 0 };
 
-// 로그인 기능은 제거되었습니다. iCloud 백업만 사용합니다.
+export const unstable_settings = {
+  anchor: "(tabs)",
+};
 
 export default function RootLayout() {
   const initialInsets = initialWindowMetrics?.insets ?? DEFAULT_WEB_INSETS;
@@ -79,13 +79,9 @@ export default function RootLayout() {
     };
   }, [initialInsets, initialFrame]);
 
-  // Auto-restore from iCloud on app start
-  useICloudAutoRestore();
-
   const content = (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AchievementsProvider>
-      <ListsProvider>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
           {/* Default to hiding native headers so raw route segments don't appear (e.g. "(tabs)", "products/[id]"). */}
@@ -93,17 +89,13 @@ export default function RootLayout() {
           {/* in order for ios apps tab switching to work properly, use presentation: "fullScreenModal" for login page, whenever you decide to use presentation: "modal*/}
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" />
-            {/* <Stack.Screen name="oauth/callback" /> */}
+            <Stack.Screen name="oauth/callback" />
             <Stack.Screen name="add" options={{ presentation: "modal" }} />
-            <Stack.Screen name="add-list" options={{ presentation: "modal" }} />
             <Stack.Screen name="detail/[id]" />
-            <Stack.Screen name="list/[id]" />
-            <Stack.Screen name="stats" options={{ presentation: "modal" }} />
           </Stack>
           <StatusBar style="light" />
         </QueryClientProvider>
       </trpc.Provider>
-      </ListsProvider>
       </AchievementsProvider>
     </GestureHandlerRootView>
   );

@@ -5,7 +5,7 @@ import { Achievement, Category, getStarColor, getStarGlowIntensity } from '@/typ
 import { useRouter } from 'expo-router';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const MIN_HEIGHT = 200;
+const VIEW_HEIGHT = 280;
 const PADDING = 40;
 
 interface StarPosition {
@@ -14,19 +14,18 @@ interface StarPosition {
   achievement: Achievement;
 }
 
-function generateConstellationPositions(achievements: Achievement[]): { positions: StarPosition[]; height: number } {
-  if (achievements.length === 0) return { positions: [], height: MIN_HEIGHT };
+function generateConstellationPositions(achievements: Achievement[]): StarPosition[] {
+  if (achievements.length === 0) return [];
 
   const positions: StarPosition[] = [];
   const usableWidth = SCREEN_WIDTH - PADDING * 2;
+  const usableHeight = VIEW_HEIGHT - PADDING * 2;
 
-  // 별 개수에 따라 높이 동적 계산
-  // 한 줄에 3-4개씩 배치하고, 각 행의 높이는 약 100px
+  // Create a grid-based layout with some randomness
   const cols = Math.ceil(Math.sqrt(achievements.length * 1.5));
   const rows = Math.ceil(achievements.length / cols);
-  const cellH = Math.max(100, 80 + rows * 20); // 기본 80px + 행당 20px
-  const usableHeight = Math.max(MIN_HEIGHT, cellH * rows);
   const cellW = usableWidth / cols;
+  const cellH = usableHeight / rows;
 
   achievements.forEach((achievement, i) => {
     const col = i % cols;
@@ -41,7 +40,7 @@ function generateConstellationPositions(achievements: Achievement[]): { position
     });
   });
 
-  return { positions, height: usableHeight + PADDING * 2 };
+  return positions;
 }
 
 interface ConstellationViewProps {
@@ -52,7 +51,7 @@ interface ConstellationViewProps {
 
 export function ConstellationView({ category, achievements, onStarPress }: ConstellationViewProps) {
   const router = useRouter();
-  const { positions, height } = useMemo(
+  const positions = useMemo(
     () => generateConstellationPositions(achievements),
     [achievements]
   );
@@ -67,7 +66,7 @@ export function ConstellationView({ category, achievements, onStarPress }: Const
 
   if (achievements.length === 0) {
     return (
-      <View style={[styles.emptyContainer, { height: MIN_HEIGHT }]}>
+      <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>별이 없습니다</Text>
         <Text style={styles.emptySubtext}>성취를 추가하면 별이 나타납니다</Text>
       </View>
@@ -75,8 +74,8 @@ export function ConstellationView({ category, achievements, onStarPress }: Const
   }
 
   return (
-    <View style={[styles.container, { height }]}>
-      <Svg width={SCREEN_WIDTH} height={height} style={styles.svg}>
+    <View style={styles.container}>
+      <Svg width={SCREEN_WIDTH} height={VIEW_HEIGHT} style={styles.svg}>
         {/* Constellation lines connecting adjacent stars */}
         {positions.map((pos, i) => {
           if (i === 0) return null;
@@ -148,6 +147,7 @@ export function ConstellationView({ category, achievements, onStarPress }: Const
 const styles = StyleSheet.create({
   container: {
     width: SCREEN_WIDTH,
+    height: VIEW_HEIGHT,
     position: 'relative',
   },
   svg: {
@@ -163,6 +163,7 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     width: SCREEN_WIDTH,
+    height: VIEW_HEIGHT,
     alignItems: 'center',
     justifyContent: 'center',
   },
