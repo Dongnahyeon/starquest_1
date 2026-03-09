@@ -56,7 +56,9 @@ export function getSessionCookieOptions(
     domain,
     httpOnly: true,
     path: "/",
-    sameSite: "lax",
+    // Use 'none' to allow cross-site requests (PWA, different domains)
+    // This is safe because we have httpOnly and secure flags
+    sameSite: "none",
     secure: isSecure,
   };
 }

@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, Platform } from 'react-native';
 import { ScreenContainer } from '@/components/screen-container';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'expo-router';
@@ -23,11 +23,20 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      // OAuth 로그인 URL로 이동
-      const authUrl = 'https://api.manus.im/oauth/authorize?response_type=code&client_id=starquest';
-      await WebBrowser.openBrowserAsync(authUrl);
-      // 로그인 후 다시 확인
-      setTimeout(() => refresh(), 1000);
+      
+      // 웹 플랫폼: 직접 리다이렉트
+      if (Platform.OS === 'web') {
+        // 로그인 후 돌아올 URL
+        const redirectUrl = window.location.origin;
+        const authUrl = `https://api.manus.im/oauth/authorize?response_type=code&client_id=starquest&redirect_uri=${encodeURIComponent(redirectUrl)}`;
+        window.location.href = authUrl;
+      } else {
+        // 네이티브 플랫폼: WebBrowser 사용
+        const authUrl = 'https://api.manus.im/oauth/authorize?response_type=code&client_id=starquest';
+        await WebBrowser.openBrowserAsync(authUrl);
+        // 로그인 후 다시 확인
+        setTimeout(() => refresh(), 1000);
+      }
     } catch (error) {
       console.error('Login failed:', error);
     }
