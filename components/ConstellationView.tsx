@@ -99,9 +99,11 @@ export function ConstellationView({ category, achievements, onStarPress }: Const
         {positions.map((pos) => {
           const glowIntensity = getStarGlowIntensity(pos.achievement.completionCount);
           const starColor = getStarColor(pos.achievement.completionCount);
-          // 별 크기를 개수에 따라 동적으로 변경 (6~16)
-          const baseSize = Math.min(16, Math.max(6, 6 + (pos.achievement.completionCount * 0.5)));
-          const glowSize = baseSize + glowIntensity * 12;
+          // 모든 별은 동일한 크기 유지
+          // 카테고리 내 별 개수에 따라 크기 조정
+          const starCount = positions.length;
+          const baseSizeByCount = starCount > 8 ? 10 : starCount > 5 ? 12 : 14;
+          const glowSize = baseSizeByCount + glowIntensity * 12;
 
           return (
             <React.Fragment key={pos.achievement.id}>
@@ -117,7 +119,7 @@ export function ConstellationView({ category, achievements, onStarPress }: Const
               <Circle
                 cx={pos.x}
                 cy={pos.y}
-                r={baseSize}
+                r={baseSizeByCount}
                 fill={starColor}
                 opacity={0.9}
               />
