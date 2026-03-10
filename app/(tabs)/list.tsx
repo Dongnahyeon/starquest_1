@@ -23,7 +23,7 @@ import { ScreenContainer } from '@/components/screen-container';
 export default function ListScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { achievements, categories, completeAchievement, deleteAchievement, reorderAchievements } = useAchievementsContext();
+  const { achievements, categories, completeAchievement, deleteAchievement, reorderAchievements, updateAchievementTitle } = useAchievementsContext();
   const { lists, deleteList, reorderLists } = useListsContext();
   const [selectedTab, setSelectedTab] = useState<'achievements' | 'lists'>('achievements');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | 'all'>('all');
@@ -49,6 +49,34 @@ export default function ListScreen() {
     setJustCompleted(achievement.id);
     await completeAchievement(achievement.id);
     setTimeout(() => setJustCompleted(null), 800);
+  };
+
+  const handleEditAchievement = (achievement: Achievement) => {
+    Alert.prompt(
+      '별 수정',
+      `"${achievement.title}" 별의 이름을 변경하세요.`,
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '수정',
+          onPress: async (text: string | undefined) => {
+            if (text && text.trim()) {
+              try {
+                await updateAchievementTitle(achievement.id, text.trim());
+                if (Platform.OS !== 'web') {
+                  await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                }
+              } catch (error) {
+                console.error('Update failed:', error);
+                Alert.alert('오류', '별 수정에 실패했습니다.');
+              }
+            }
+          },
+        },
+      ],
+      'plain-text',
+      achievement.title
+    );
   };
 
   const handleDelete = (achievement: Achievement) => {
@@ -179,6 +207,12 @@ export default function ListScreen() {
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <IconSymbol name="chevron.down" size={16} color={achievementIndex === filteredAchievements.length - 1 ? '#475569' : '#718096'} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleEditAchievement(item)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <IconSymbol name="pencil" size={16} color="#718096" />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => handleDelete(item)}

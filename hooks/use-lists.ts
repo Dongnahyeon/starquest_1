@@ -255,6 +255,75 @@ export function useLists() {
     [lists]
   );
 
+  // 리스트명 수정
+  const updateListTitle = useCallback(
+    async (listId: string, newTitle: string) => {
+      try {
+        const updated = lists.map((list) =>
+          list.id === listId ? { ...list, title: newTitle, updatedAt: new Date().toISOString() } : list
+        );
+        setLists(updated);
+        await saveLists(updated);
+      } catch (error) {
+        console.error('Error in updateListTitle:', error);
+        throw error;
+      }
+    },
+    [lists, saveLists]
+  );
+
+  // 리스트 항목 수정
+  const updateListItemTitle = useCallback(
+    async (listId: string, itemId: string, newTitle: string) => {
+      try {
+        const updated = lists.map((list) => {
+          if (list.id === listId) {
+            return {
+              ...list,
+              items: list.items.map((item) =>
+                item.id === itemId ? { ...item, title: newTitle } : item
+              ),
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return list;
+        });
+        setLists(updated);
+        await saveLists(updated);
+      } catch (error) {
+        console.error('Error in updateListItemTitle:', error);
+        throw error;
+      }
+    },
+    [lists, saveLists]
+  );
+
+  // 메모 수정
+  const updateListItemNote = useCallback(
+    async (listId: string, itemId: string, newNote: string) => {
+      try {
+        const updated = lists.map((list) => {
+          if (list.id === listId) {
+            return {
+              ...list,
+              items: list.items.map((item) =>
+                item.id === itemId ? { ...item, completionNote: newNote } : item
+              ),
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return list;
+        });
+        setLists(updated);
+        await saveLists(updated);
+      } catch (error) {
+        console.error('Error in updateListItemNote:', error);
+        throw error;
+      }
+    },
+    [lists, saveLists]
+  );
+
   // 리스트 순서 변경
   const reorderLists = useCallback(
     async (fromIndex: number, toIndex: number) => {
@@ -294,6 +363,9 @@ export function useLists() {
     toggleListItem,
     deleteListItem,
     deleteList,
+    updateListTitle,
+    updateListItemTitle,
+    updateListItemNote,
     reorderListItems,
     reorderLists,
     getListById,

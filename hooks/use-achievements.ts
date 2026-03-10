@@ -175,6 +175,19 @@ export function useAchievements() {
     [data.achievements]
   );
 
+  const updateAchievementTitle = useCallback(
+    async (id: string, newTitle: string) => {
+      const newData = {
+        ...data,
+        achievements: data.achievements.map((a) =>
+          a.id === id ? { ...a, title: newTitle } : a
+        ),
+      };
+      await saveData(newData);
+    },
+    [data, saveData]
+  );
+
   const reorderAchievements = useCallback(
     async (fromIndex: number, toIndex: number) => {
       const newAchievements = [...data.achievements];
@@ -200,6 +213,7 @@ export function useAchievements() {
     completeAchievement,
     uncompleteAchievement,
     deleteAchievement,
+    updateAchievementTitle,
     addCategory,
     getAchievementsByCategory,
     getCategoryById,
