@@ -153,8 +153,16 @@ export default function ListDetailScreen() {
         text: '삭제',
         style: 'destructive',
         onPress: async () => {
-          if (list) {
-            await deleteListItem(list.id, itemId);
+          try {
+            if (list) {
+              await deleteListItem(list.id, itemId);
+              if (Platform.OS !== 'web') {
+                await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              }
+            }
+          } catch (error) {
+            console.error('Delete error:', error);
+            Alert.alert('오류', '항목 삭제에 실패했습니다.');
           }
         },
       },
@@ -424,6 +432,11 @@ export default function ListDetailScreen() {
                 생성: {new Date(item.createdAt).toLocaleString('ko-KR')}
                 {item.completedAt && `\n완수: ${new Date(item.completedAt).toLocaleString('ko-KR')}`}
               </Text>
+              {item.completionNote && (
+                <Text style={styles.itemNote}>
+                  메모: {item.completionNote}
+                </Text>
+              )}
             </View>
 
             <View style={styles.itemActions}>
@@ -750,6 +763,13 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#718096',
     lineHeight: 16,
+  },
+  itemNote: {
+    fontSize: 11,
+    color: '#A0AEC0',
+    lineHeight: 16,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   itemActions: {
     flexDirection: 'row',

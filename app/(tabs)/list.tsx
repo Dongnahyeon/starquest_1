@@ -60,7 +60,17 @@ export default function ListScreen() {
         {
           text: '삭제',
           style: 'destructive',
-          onPress: () => deleteAchievement(achievement.id),
+          onPress: async () => {
+            try {
+              await deleteAchievement(achievement.id);
+              if (Platform.OS !== 'web') {
+                await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              }
+            } catch (error) {
+              console.error('Delete failed:', error);
+              Alert.alert('오류', '별 삭제에 실패했습니다.');
+            }
+          },
         },
       ]
     );
@@ -75,7 +85,17 @@ export default function ListScreen() {
         {
           text: '삭제',
           style: 'destructive',
-          onPress: () => deleteList(listId),
+          onPress: async () => {
+            try {
+              await deleteList(listId);
+              if (Platform.OS !== 'web') {
+                await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              }
+            } catch (error) {
+              console.error('Delete failed:', error);
+              Alert.alert('오류', '리스트 삭제에 실패했습니다.');
+            }
+          },
         },
       ]
     );
