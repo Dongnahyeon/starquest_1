@@ -32,6 +32,9 @@ export default function ListScreen() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
   const [editText, setEditText] = useState('');
+  const [showEditListModal, setShowEditListModal] = useState(false);
+  const [editingList, setEditingList] = useState<{ id: string; title: string } | null>(null);
+  const [editListText, setEditListText] = useState('');
 
   const filteredAchievements =
     selectedCategoryId === 'all'
@@ -129,6 +132,12 @@ export default function ListScreen() {
       ]
     );
   };
+  const handleEditListTitle = async (listId: string, currentTitle: string) => {
+    setEditingList({ id: listId, title: currentTitle });
+    setEditListText(currentTitle);
+    setShowEditListModal(true);
+  };
+
 
   const handleMoveAchievementUp = async (index: number) => {
     if (index > 0) {
@@ -277,6 +286,12 @@ export default function ListScreen() {
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <IconSymbol name="chevron.down" size={16} color={index === lists.length - 1 ? '#475569' : '#718096'} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleEditListTitle(item.id, item.title)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <IconSymbol name="pencil" size={16} color="#4ECDC4" />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => handleDeleteList(item.id, item.title)}

@@ -42,6 +42,12 @@ export default function ListDetailScreen() {
   const [selectedItemNote, setSelectedItemNote] = useState('');
   const [selectedItemTitle, setSelectedItemTitle] = useState('');
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
+  const [showEditItemModal, setShowEditItemModal] = useState(false);
+  const [editItemText, setEditItemText] = useState('');
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [showEditListModal, setShowEditListModal] = useState(false);
+  const [editListText, setEditListText] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const starScale = useRef(new Animated.Value(1)).current;
   const starGlow = useRef(new Animated.Value(0)).current;
@@ -210,57 +216,65 @@ export default function ListDetailScreen() {
   };
 
   const handleEditItem = (itemId: string, currentTitle: string) => {
-    Alert.prompt(
-      '항목 수정',
-      `"${currentTitle}" 항목의 이름을 변경하세요.`,
-      [
-        { text: '취소', style: 'cancel' },
-        {
-          text: '수정',
-          onPress: async (text: string | undefined) => {
-            if (text && text.trim() && list) {
-              try {
-                await updateListItemTitle(list.id, itemId, text.trim());
-                if (Platform.OS !== 'web') {
-                  await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                }
-              } catch (error) {
-                console.error('Update failed:', error);
-                Alert.alert('오류', '항목 수정에 실패했습니다.');
-              }
-            }
-          },
-        },
-      ],
-      'plain-text',
-      currentTitle
-    );
+    setEditingItemId(itemId);
+    setEditItemText(currentTitle);
+    setShowEditItemModal(true);
+  };
+
+  const handleSaveEditItem = async () => {
+    if (!editItemText.trim() || !list || !editingItemId) return;
+    try {
+      await updateListItemTitle(list.id, editingItemId, editItemText.trim());
+      setShowEditItemModal(false);
+      setEditingItemId(null);
+      setEditItemText('');
+      if (Platform.OS !== 'web') {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error('Update failed:', error);
+      Alert.alert('오류', '항목 수정에 실패했습니다.');
+    }
   };
 
   const handleDeleteList = () => {
-    Alert.alert(
-      '리스트 삭제',
-      `"${list?.title}" 리스트를 삭제할까요?\n모든 항목이 사라집니다.`,
-      [
-        { text: '취소', style: 'cancel' },
-        {
-          text: '삭제',
-          style: 'destructive',
-          onPress: async () => {
-            if (list) {
-              try {
-                await deleteList(list.id);
-                await new Promise(resolve => setTimeout(resolve, 200));
-                router.back();
-              } catch (error) {
-                console.error('Delete error:', error);
-                Alert.alert('오류', '리스트 삭제에 실패했습니다.');
-              }
-            }
-          },
-        },
-      ]
-    );
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (list) {
+      try {
+        await deleteList(list.id);
+        await new Promise(resolve => setTimeout(resolve, 200));
+        router.back();
+      } catch (error) {
+        console.error('Delete error:', error);
+        Alert.alert('오류', '리스트 삭제에 실패했습니다.');
+      }
+    }
+  };
+
+  const handleEditListTitle = () => {
+    if (list) {
+      setEditListText(list.title);
+      setShowEditListModal(true);
+    }
+  };
+
+  const handleSaveEditListTitle = async () => {
+    if (!editListText.trim() || !list) return;
+    try {
+      const { updateListTitle } = useListsContext();
+      await updateListTitle(list.id, editListText.trim());
+      setShowEditListModal(false);
+      setEditListText('');
+      if (Platform.OS !== 'web') {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error('Update failed:', error);
+      Alert.alert('오류', '리스트명 수정에 실패했습니다.');
+    }
   };
 
   if (!list) {
@@ -313,9 +327,14 @@ export default function ListDetailScreen() {
               <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                 <IconSymbol name="arrow.left" size={24} color="#E2E8F0" />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteList}>
-                <IconSymbol name="trash.fill" size={20} color="#FC8181" />
-              </TouchableOpacity>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <TouchableOpacity style={styles.deleteButton} onPress={handleEditListTitle}>
+                  <IconSymbol name="pencil" size={20} color="#A0AEC0" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteList}>
+                  <IconSymbol name="trash.fill" size={20} color="#FC8181" />
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Category badge */}
@@ -607,6 +626,126 @@ export default function ListDetailScreen() {
           </View>
         </View>
       )}
+
+      {/* 항목 수정 모달 */}
+    {showEditItemModal && (
+      <View style={styles.modalOverlay}>
+        <View style={styles.modal}>
+          <Text style={styles.modalTitle}>항목 수정</Text>
+          <TextInput
+            style={styles.modalInput}
+            placeholder="항목 이름"
+            placeholderTextColor="#718096"
+            value={editItemText}
+            onChangeText={setEditItemText}
+            maxLength={100}
+          />
+          <View style={styles.modalButtonRow}>
+            <TouchableOpacity
+              style={styles.modalCancelButton}
+              onPress={() => setShowEditItemModal(false)}
+            >
+              <Text style={styles.modalCancelButtonText}>취소</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalSaveButton}
+              onPress={handleSaveEditItem}
+            >
+              <Text style={styles.modalSaveButtonText}>저장</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    )}
+
+    {/* 리스트명 수정 모달 */}
+    {showEditListModal && (
+      <View style={styles.modalOverlay}>
+        <View style={styles.modal}>
+          <Text style={styles.modalTitle}>리스트명 수정</Text>
+          <TextInput
+            style={styles.modalInput}
+            placeholder="리스트 이름"
+            placeholderTextColor="#718096"
+            value={editListText}
+            onChangeText={setEditListText}
+            maxLength={100}
+          />
+          <View style={styles.modalButtonRow}>
+            <TouchableOpacity
+              style={styles.modalCancelButton}
+              onPress={() => setShowEditListModal(false)}
+            >
+              <Text style={styles.modalCancelButtonText}>취소</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalSaveButton}
+              onPress={handleSaveEditListTitle}
+            >
+              <Text style={styles.modalSaveButtonText}>저장</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    )}
+
+    {/* 메모 수정 모달 */}
+    {showNoteModal && (
+      <View style={styles.modalOverlay}>
+        <View style={styles.modal}>
+          <Text style={styles.modalTitle}>메모 수정</Text>
+          <TextInput
+            style={[styles.modalInput, { height: 120, textAlignVertical: 'top' }]}
+            placeholder="메모를 입력하세요"
+            placeholderTextColor="#718096"
+            value={noteText}
+            onChangeText={setNoteText}
+            multiline
+            maxLength={500}
+          />
+          <View style={styles.modalButtonRow}>
+            <TouchableOpacity
+              style={styles.modalCancelButton}
+              onPress={() => setShowNoteModal(false)}
+            >
+              <Text style={styles.modalCancelButtonText}>취소</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalSaveButton}
+              onPress={handleSaveNote}
+            >
+              <Text style={styles.modalSaveButtonText}>저장</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    )}
+
+    {/* 삭제 확인 모달 */}
+    {showDeleteModal && (
+      <View style={styles.modalOverlay}>
+        <View style={styles.modal}>
+          <Text style={styles.modalTitle}>리스트 삭제</Text>
+          <Text style={styles.modalMessage}>
+            "{list?.title}" 리스트를 삭제할까요?{"\n"}모든 항목이 사라집니다.
+          </Text>
+          <View style={styles.modalButtonRow}>
+            <TouchableOpacity
+              style={styles.modalCancelButton}
+              onPress={() => setShowDeleteModal(false)}
+            >
+              <Text style={styles.modalCancelButtonText}>취소</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalSaveButton, { backgroundColor: '#FC8181' }]}
+              onPress={handleConfirmDelete}
+            >
+              <Text style={styles.modalSaveButtonText}>삭제</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    )}
     </View>
   );
 }
