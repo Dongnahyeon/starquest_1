@@ -115,11 +115,18 @@ export function useAchievements() {
 
   const deleteAchievement = useCallback(
     async (id: string) => {
-      const newData = {
-        ...data,
-        achievements: data.achievements.filter((a) => a.id !== id),
-      };
-      await saveData(newData);
+      try {
+        const deletedTitle = data.achievements.find((a) => a.id === id)?.title || 'Unknown';
+        const newData = {
+          ...data,
+          achievements: data.achievements.filter((a) => a.id !== id),
+        };
+        await saveData(newData);
+        console.log('[LOG] 별 삭제 완료:', deletedTitle, '남은 별:', newData.achievements.length);
+      } catch (error) {
+        console.error('Error in deleteAchievement:', error);
+        throw error;
+      }
     },
     [data, saveData]
   );
