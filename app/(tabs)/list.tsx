@@ -396,11 +396,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   listContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 0,
   },
   listGrid: {
     gap: 12,
-    paddingHorizontal: 0,
+    paddingHorizontal: 16,
+    justifyContent: 'space-between',
   },
   achievementCard: {
     flexDirection: 'row',
