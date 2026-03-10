@@ -6,6 +6,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Pressable,
 } from 'react-native';
 import { useState, useCallback } from 'react';
 import { useRouter } from 'expo-router';
@@ -177,57 +178,66 @@ export default function ListScreen() {
     const completionPercent = item.totalCount > 0 ? Math.round((item.completionCount / item.totalCount) * 100) : 0;
 
     return (
-      <TouchableOpacity
-        style={styles.listCard}
-        onPress={() => router.push(`/list/${item.id}` as any)}
-        activeOpacity={0.7}
+      <Pressable
+        style={styles.listCardContainer}
+        onLongPress={() => {
+          if (Platform.OS !== 'web') {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          }
+        }}
       >
-        <View style={styles.listCardHeader}>
-          <Text style={styles.listCardTitle} numberOfLines={2}>
-            {item.title}
-          </Text>
-          <View style={styles.listCardActions}>
-            <TouchableOpacity
-              onPress={() => handleMoveListUp(index)}
-              disabled={index === 0}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <IconSymbol name="chevron.up" size={14} color={index === 0 ? '#475569' : '#718096'} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleMoveListDown(index)}
-              disabled={index === lists.length - 1}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <IconSymbol name="chevron.down" size={14} color={index === lists.length - 1 ? '#475569' : '#718096'} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleDeleteList(item.id, item.title)}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <IconSymbol name="trash" size={14} color="#FC8181" />
-            </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.listCard}
+          onPress={() => router.push(`/list/${item.id}` as any)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.listCardHeader}>
+            <Text style={styles.listCardTitle} numberOfLines={2}>
+              {item.title}
+            </Text>
           </View>
+          <View style={styles.listCardProgress}>
+            <View style={styles.listCardProgressBg}>
+              <View
+                style={[
+                  styles.listCardProgressFill,
+                  { width: `${completionPercent}%`, backgroundColor: item.isCompleted ? '#22C55E' : '#4ECDC4' },
+                ]}
+              />
+            </View>
+            <Text style={styles.listCardProgressText}>
+              {item.completionCount}/{item.totalCount}
+            </Text>
+          </View>
+          {item.isCompleted && (
+            <View style={styles.completedBadge}>
+              <Text style={styles.completedBadgeText}>✓ 완료</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+        <View style={styles.listCardActions}>
+          <TouchableOpacity
+            onPress={() => handleMoveListUp(index)}
+            disabled={index === 0}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <IconSymbol name="chevron.up" size={16} color={index === 0 ? '#475569' : '#718096'} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleMoveListDown(index)}
+            disabled={index === lists.length - 1}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <IconSymbol name="chevron.down" size={16} color={index === lists.length - 1 ? '#475569' : '#718096'} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleDeleteList(item.id, item.title)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <IconSymbol name="trash" size={16} color="#FC8181" />
+          </TouchableOpacity>
         </View>
-        <View style={styles.listCardProgress}>
-          <View style={styles.listCardProgressBg}>
-            <View
-              style={[
-                styles.listCardProgressFill,
-                { width: `${completionPercent}%`, backgroundColor: item.isCompleted ? '#22C55E' : '#4ECDC4' },
-              ]}
-            />
-          </View>
-          <Text style={styles.listCardProgressText}>
-            {item.completionCount}/{item.totalCount}
-          </Text>
-        </View>
-        {item.isCompleted && (
-          <View style={styles.completedBadge}>
-            <Text style={styles.completedBadgeText}>✓ 완료</Text>
-          </View>
-        )}
-      </TouchableOpacity>
+      </Pressable>
     );
   };
 
@@ -470,9 +480,13 @@ const styles = StyleSheet.create({
     color: '#F5C842',
     marginRight: 4,
   },
-  listCard: {
+  listCardContainer: {
     flex: 0.5,
-    paddingVertical: 16,
+    gap: 8,
+  },
+  listCard: {
+    flex: 1,
+    paddingVertical: 12,
     paddingHorizontal: 12,
     backgroundColor: '#111827',
     borderRadius: 12,
@@ -489,14 +503,20 @@ const styles = StyleSheet.create({
   listCardActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    backgroundColor: '#0A0E1A',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#1E2A3A',
   },
   listCardTitle: {
     flex: 1,
     fontSize: 13,
     fontWeight: '600',
     color: '#E2E8F0',
-    marginRight: 8,
   },
   listCardProgress: {
     gap: 4,
