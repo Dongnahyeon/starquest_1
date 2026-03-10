@@ -4,6 +4,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
   Pressable,
@@ -28,6 +29,9 @@ export default function ListScreen() {
   const [selectedTab, setSelectedTab] = useState<'achievements' | 'lists'>('achievements');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | 'all'>('all');
   const [justCompleted, setJustCompleted] = useState<string | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
+  const [editText, setEditText] = useState('');
 
   const filteredAchievements =
     selectedCategoryId === 'all'
@@ -52,31 +56,25 @@ export default function ListScreen() {
   };
 
   const handleEditAchievement = (achievement: Achievement) => {
-    Alert.prompt(
-      '별 수정',
-      `"${achievement.title}" 별의 이름을 변경하세요.`,
-      [
-        { text: '취소', style: 'cancel' },
-        {
-          text: '수정',
-          onPress: async (text: string | undefined) => {
-            if (text && text.trim()) {
-              try {
-                await updateAchievementTitle(achievement.id, text.trim());
-                if (Platform.OS !== 'web') {
-                  await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                }
-              } catch (error) {
-                console.error('Update failed:', error);
-                Alert.alert('오류', '별 수정에 실패했습니다.');
-              }
-            }
-          },
-        },
-      ],
-      'plain-text',
-      achievement.title
-    );
+    setEditingAchievement(achievement);
+    setEditText(achievement.title);
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingAchievement || !editText.trim()) return;
+    try {
+      await updateAchievementTitle(editingAchievement.id, editText.trim());
+      setShowEditModal(false);
+      setEditingAchievement(null);
+      setEditText('');
+      if (Platform.OS !== 'web') {
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error('Update failed:', error);
+      Alert.alert('오류', '별 수정에 실패했습니다.');
+    }
   };
 
   const handleDelete = (achievement: Achievement) => {
@@ -417,6 +415,45 @@ export default function ListScreen() {
           }
         />
       )}
+
+      {/* Edit Achievement Modal */}
+      {showEditModal && editingAchievement && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>별 수정</Text>
+            <Text style={styles.modalSubtitle}>별의 이름을 변경하세요</Text>
+            
+            <TextInput
+              style={styles.modalInput}
+              placeholder="별 이름"
+              placeholderTextColor="#718096"
+              value={editText}
+              onChangeText={setEditText}
+              autoFocus
+            />
+            
+            <View style={styles.modalButtonRow}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setShowEditModal(false);
+                  setEditingAchievement(null);
+                  setEditText('');
+                }}
+              >
+                <Text style={styles.modalCancelButtonText}>취소</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.modalSaveButton}
+                onPress={handleSaveEdit}
+              >
+                <Text style={styles.modalSaveButtonText}>저장</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -629,6 +666,74 @@ const styles = StyleSheet.create({
   emptyAddButtonText: {
     fontSize: 13,
     fontWeight: '700',
+    color: '#0A0E1A',
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  modalContent: {
+    backgroundColor: '#1F2937',
+    borderRadius: 16,
+    padding: 20,
+    width: '80%',
+    maxWidth: 300,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#E2E8F0',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    color: '#718096',
+    marginBottom: 16,
+  },
+  modalInput: {
+    backgroundColor: '#111827',
+    borderWidth: 1,
+    borderColor: '#334155',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: '#E2E8F0',
+    marginBottom: 16,
+    fontSize: 14,
+  },
+  modalButtonRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  modalCancelButton: {
+    flex: 1,
+    paddingVertical: 10,
+    backgroundColor: '#334155',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalCancelButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#E2E8F0',
+  },
+  modalSaveButton: {
+    flex: 1,
+    paddingVertical: 10,
+    backgroundColor: '#F5C842',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalSaveButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
     color: '#0A0E1A',
   },
 });
