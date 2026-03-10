@@ -201,14 +201,7 @@ export default function ListScreen() {
     const completionPercent = item.totalCount > 0 ? Math.round((item.completionCount / item.totalCount) * 100) : 0;
 
     return (
-      <Pressable
-        style={styles.listCardContainer}
-        onLongPress={() => {
-          if (Platform.OS !== 'web') {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          }
-        }}
-      >
+      <View style={styles.listCardContainer}>
         <TouchableOpacity
           style={styles.listCard}
           onPress={() => router.push(`/list/${item.id}` as any)}
@@ -260,7 +253,7 @@ export default function ListScreen() {
             <IconSymbol name="trash" size={16} color="#FC8181" />
           </TouchableOpacity>
         </View>
-      </Pressable>
+      </View>
     );
   };
 
