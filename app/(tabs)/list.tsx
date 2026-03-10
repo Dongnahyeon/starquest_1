@@ -160,10 +160,8 @@ export default function ListScreen() {
 
   return (
     <ScreenContainer className="bg-background">
-      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        {/* Tab selector */}
-        <View style={styles.tabSelector}>
-          <TouchableOpacity
+      <View style={styles.tabSelector}>
+        <TouchableOpacity
           style={[styles.tab, selectedTab === 'achievements' && styles.tabActive]}
           onPress={() => setSelectedTab('achievements')}
         >
@@ -231,6 +229,7 @@ export default function ListScreen() {
               keyExtractor={(item) => item.id}
               renderItem={renderAchievementItem}
               scrollEnabled={true}
+              nestedScrollEnabled={true}
               contentContainerStyle={styles.listContent}
             />
           ) : (
@@ -269,7 +268,6 @@ export default function ListScreen() {
           )}
         </View>
       )}
-      </ScrollView>
 
       {/* FAB for adding */}
       <TouchableOpacity
