@@ -221,6 +221,37 @@ export function useLists() {
     [lists]
   );
 
+  // 리스트 아이템 순서 변경
+  const reorderListItems = useCallback(
+    async (listId: string, fromIndex: number, toIndex: number) => {
+      try {
+        setLists((prev) => {
+          const updated = prev.map((list) => {
+            if (list.id === listId) {
+              const newItems = [...list.items];
+              const [removed] = newItems.splice(fromIndex, 1);
+              newItems.splice(toIndex, 0, removed);
+              return {
+                ...list,
+                items: newItems,
+                updatedAt: new Date().toISOString(),
+              };
+            }
+            return list;
+          });
+          saveLists(updated).catch((error) => {
+            console.error('Failed to reorder list items:', error);
+          });
+          return updated;
+        });
+      } catch (error) {
+        console.error('Error in reorderListItems:', error);
+        throw error;
+      }
+    },
+    [saveLists]
+  );
+
   // 카테고리별 리스트 조회
   const getListsByCategory = useCallback(
     (categoryId: string) => {
@@ -247,6 +278,7 @@ export function useLists() {
     toggleListItem,
     deleteListItem,
     deleteList,
+    reorderListItems,
     getListById,
     getListsByCategory,
   };

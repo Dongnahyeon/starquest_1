@@ -10,6 +10,7 @@ interface ListsContextType {
   toggleListItem: (listId: string, itemId: string, completionNote?: string) => Promise<void>;
   deleteListItem: (listId: string, itemId: string) => Promise<void>;
   deleteList: (listId: string) => Promise<void>;
+  reorderListItems: (listId: string, fromIndex: number, toIndex: number) => Promise<void>;
   getListById: (listId: string) => List | undefined;
   getListsByCategory: (categoryId: string) => List[];
 }

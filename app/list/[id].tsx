@@ -25,7 +25,7 @@ export default function ListDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { getCategoryById } = useAchievementsContext();
-  const { getListById, addListItem, toggleListItem, deleteListItem, deleteList } = useListsContext();
+  const { getListById, addListItem, toggleListItem, deleteListItem, deleteList, reorderListItems } = useListsContext();
 
   const list = getListById(id);
   const category = list ? getCategoryById(list.categoryId) : null;
@@ -35,6 +35,9 @@ export default function ListDetailScreen() {
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [noteText, setNoteText] = useState('');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [showItemNoteModal, setShowItemNoteModal] = useState(false);
+  const [selectedItemNote, setSelectedItemNote] = useState('');
+  const [selectedItemTitle, setSelectedItemTitle] = useState('');
 
   const starScale = useRef(new Animated.Value(1)).current;
   const starGlow = useRef(new Animated.Value(0)).current;
@@ -132,6 +135,13 @@ export default function ListDetailScreen() {
     setNoteText('');
   };
 
+  const handleViewNote = (itemId: string, itemTitle: string, note: string) => {
+    setSelectedItemId(itemId);
+    setSelectedItemTitle(itemTitle);
+    setSelectedItemNote(note);
+    setShowItemNoteModal(true);
+  };
+
   const handleDeleteItem = (itemId: string) => {
     Alert.alert('항목 삭제', '이 항목을 삭제할까요?', [
       { text: '취소', style: 'cancel' },
@@ -145,6 +155,23 @@ export default function ListDetailScreen() {
         },
       },
     ]);
+  };
+
+  const handleMoveItem = (itemId: string, direction: 'up' | 'down') => {
+    if (!list) return;
+    const currentIndex = list.items.findIndex(i => i.id === itemId);
+    if (currentIndex === -1) return;
+    
+    let newIndex = currentIndex;
+    if (direction === 'up' && currentIndex > 0) {
+      newIndex = currentIndex - 1;
+    } else if (direction === 'down' && currentIndex < list.items.length - 1) {
+      newIndex = currentIndex + 1;
+    } else {
+      return;
+    }
+    
+    reorderListItems(list.id, currentIndex, newIndex);
   };
 
   const handleDeleteList = () => {
@@ -210,7 +237,7 @@ export default function ListDetailScreen() {
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[styles.container, { paddingTop: insets.top + 8 }]}
+        contentContainerStyle={[styles.container, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 40 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
@@ -325,8 +352,6 @@ export default function ListDetailScreen() {
                 (!newItemTitle.trim() || isAddingItem) && styles.addItemButtonDisabled,
               ]}
               onPress={handleAddItem}
-              disabled={!newItemTitle.trim() || isAddingItem}
-              activeOpacity={0.8}
             >
               {isAddingItem ? (
                 <ActivityIndicator size="small" color="#0A0E1A" />
@@ -341,7 +366,7 @@ export default function ListDetailScreen() {
         {list.items.length > 0 ? (
           <View style={styles.itemsSection}>
             <Text style={styles.itemsTitle}>항목 ({list.items.length})</Text>
-            {list.items.map((item) => (
+            {list.items.map((item, index) => (
               <View key={item.id} style={styles.itemRow}>
                 <TouchableOpacity
                   style={styles.checkboxContainer}
@@ -364,12 +389,7 @@ export default function ListDetailScreen() {
                 </TouchableOpacity>
 
                 <View style={styles.itemContent}>
-                  <Text
-                    style={[
-                      styles.itemTitle,
-                      item.completed && styles.itemTitleCompleted,
-                    ]}
-                  >
+                  <Text style={styles.itemTitle}>
                     {item.title}
                   </Text>
                   <Text style={styles.itemTime}>
@@ -378,13 +398,46 @@ export default function ListDetailScreen() {
                   </Text>
                 </View>
 
-                <TouchableOpacity
-                  style={styles.deleteItemButton}
-                  onPress={() => handleDeleteItem(item.id)}
-                  activeOpacity={0.7}
-                >
-                  <IconSymbol name="xmark" size={16} color="#718096" />
-                </TouchableOpacity>
+                <View style={styles.itemActions}>
+                  {item.completionNote && (
+                    <TouchableOpacity
+                      style={styles.noteButton}
+                      onPress={() => handleViewNote(item.id, item.title, item.completionNote || '')}
+                      activeOpacity={0.7}
+                    >
+                      <IconSymbol name="note.text" size={16} color="#A0AEC0" />
+                    </TouchableOpacity>
+                  )}
+                  
+                  <View style={styles.orderButtons}>
+                    {index > 0 && (
+                      <TouchableOpacity
+                        style={styles.orderButton}
+                        onPress={() => handleMoveItem(item.id, 'up')}
+                        activeOpacity={0.7}
+                      >
+                        <IconSymbol name="arrow.up" size={14} color="#718096" />
+                      </TouchableOpacity>
+                    )}
+                    {index < list.items.length - 1 && (
+                      <TouchableOpacity
+                        style={styles.orderButton}
+                        onPress={() => handleMoveItem(item.id, 'down')}
+                        activeOpacity={0.7}
+                      >
+                        <IconSymbol name="arrow.down" size={14} color="#718096" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.deleteItemButton}
+                    onPress={() => handleDeleteItem(item.id)}
+                    activeOpacity={0.7}
+                  >
+                    <IconSymbol name="xmark" size={16} color="#FC8181" />
+                  </TouchableOpacity>
+                </View>
               </View>
             ))}
           </View>
@@ -405,12 +458,9 @@ export default function ListDetailScreen() {
             </Text>
           </View>
         )}
-
-        {/* Bottom padding */}
-        <View style={{ height: insets.bottom + 40 }} />
       </ScrollView>
       
-      {/* Note Modal */}
+      {/* Note Modal - 완료 메모 입력 */}
       {showNoteModal && (
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -449,6 +499,27 @@ export default function ListDetailScreen() {
           </View>
         </View>
       )}
+
+      {/* Note View Modal - 메모 보기 */}
+      {showItemNoteModal && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{selectedItemTitle}</Text>
+            <Text style={styles.modalSubtitle}>메모</Text>
+            
+            <View style={styles.noteViewBox}>
+              <Text style={styles.noteViewText}>{selectedItemNote}</Text>
+            </View>
+            
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowItemNoteModal(false)}
+            >
+              <Text style={styles.modalCloseButtonText}>닫기</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -477,7 +548,6 @@ const styles = StyleSheet.create({
   },
   container: {
     paddingHorizontal: 20,
-    paddingBottom: 40,
   },
   header: {
     flexDirection: 'row',
@@ -673,9 +743,29 @@ const styles = StyleSheet.create({
     color: '#718096',
     lineHeight: 16,
   },
-  itemTitleCompleted: {
-    color: '#718096',
-    textDecorationLine: 'line-through',
+  itemActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  noteButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  orderButtons: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  orderButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1E2A3A',
   },
   deleteItemButton: {
     width: 32,
@@ -769,6 +859,21 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlignVertical: 'top',
   },
+  noteViewBox: {
+    backgroundColor: '#111827',
+    borderWidth: 1,
+    borderColor: '#1E2A3A',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    marginBottom: 20,
+    minHeight: 80,
+  },
+  noteViewText: {
+    color: '#E2E8F0',
+    fontSize: 15,
+    lineHeight: 22,
+  },
   modalButtonRow: {
     flexDirection: 'row',
     gap: 12,
@@ -793,6 +898,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalSaveButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0A0E1A',
+  },
+  modalCloseButton: {
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: '#4ECDC4',
+    alignItems: 'center',
+  },
+  modalCloseButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#0A0E1A',

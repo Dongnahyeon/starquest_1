@@ -153,7 +153,7 @@ export default function DetailScreen() {
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[styles.container, { paddingTop: insets.top + 8 }]}
+        contentContainerStyle={[styles.container, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 40 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
@@ -286,8 +286,7 @@ export default function DetailScreen() {
           </View>
         )}
 
-        {/* Bottom padding */}
-        <View style={{ height: insets.bottom + 40 }} />
+
       </ScrollView>
     </View>
   );
@@ -333,7 +332,6 @@ const styles = StyleSheet.create({
   },
   container: {
     paddingHorizontal: 20,
-    paddingBottom: 40,
   },
   header: {
     flexDirection: 'row',
