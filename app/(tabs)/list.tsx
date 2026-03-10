@@ -159,102 +159,126 @@ export default function ListScreen() {
   };
 
   return (
-    <ScreenContainer className="bg-background">
-      <View style={styles.tabSelector}>
-        <TouchableOpacity
-          style={[styles.tab, selectedTab === 'achievements' && styles.tabActive]}
-          onPress={() => setSelectedTab('achievements')}
-        >
-          <IconSymbol name="sparkles" size={18} color={selectedTab === 'achievements' ? '#F5C842' : '#718096'} />
-          <Text style={[styles.tabText, selectedTab === 'achievements' && styles.tabTextActive]}>
-            별 목록
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, selectedTab === 'lists' && styles.tabActive]}
-          onPress={() => setSelectedTab('lists')}
-        >
-          <IconSymbol name="list.bullet" size={18} color={selectedTab === 'lists' ? '#F5C842' : '#718096'} />
-          <Text style={[styles.tabText, selectedTab === 'lists' && styles.tabTextActive]}>
-            리스트
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Content */}
+    <View style={styles.root}>
       {selectedTab === 'achievements' ? (
-        <View style={styles.content}>
-          {/* Category filter */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.categoryScroll}
-            contentContainerStyle={styles.categoryScrollContent}
-          >
-            <TouchableOpacity
-              style={[styles.categoryTab, selectedCategoryId === 'all' && styles.categoryTabActive]}
-              onPress={() => setSelectedCategoryId('all')}
-            >
-              <Text style={[styles.categoryName, selectedCategoryId === 'all' && styles.categoryNameActive]}>
-                전체
-              </Text>
-            </TouchableOpacity>
-            {categories.map((cat) => {
-              const catAchievements = achievements.filter((a) => a.categoryId === cat.id);
-              const isSelected = cat.id === selectedCategoryId;
-              return (
+        <FlatList
+          data={filteredAchievements}
+          keyExtractor={(item) => item.id}
+          renderItem={renderAchievementItem}
+          scrollEnabled={true}
+          contentContainerStyle={[
+            styles.listContent,
+            { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 80 },
+          ]}
+          ListHeaderComponent={
+            <>
+              {/* Tab selector */}
+              <View style={styles.tabSelector}>
                 <TouchableOpacity
-                  key={cat.id}
-                  style={[styles.categoryTab, isSelected && styles.categoryTabActive]}
-                  onPress={() => setSelectedCategoryId(cat.id)}
+                  style={[styles.tab, (selectedTab as any) === 'achievements' && styles.tabActive]}
+                  onPress={() => setSelectedTab('achievements')}
                 >
-                  <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
-                  <Text style={[styles.categoryName, isSelected && styles.categoryNameActive]}>
-                    {cat.name}
+                  <IconSymbol name="sparkles" size={18} color={(selectedTab as any) === 'achievements' ? '#F5C842' : '#718096'} />
+                  <Text style={[styles.tabText, (selectedTab as any) === 'achievements' && styles.tabTextActive]}>
+                    별 목록
                   </Text>
-                  {catAchievements.length > 0 && (
-                    <View style={styles.categoryBadge}>
-                      <Text style={styles.categoryBadgeText}>{catAchievements.length}</Text>
-                    </View>
-                  )}
                 </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+                <TouchableOpacity
+                  style={[styles.tab, (selectedTab as any) === 'lists' && styles.tabActive]}
+                  onPress={() => setSelectedTab('lists')}
+                >
+                  <IconSymbol name="list.bullet" size={18} color={(selectedTab as any) === 'lists' ? '#F5C842' : '#718096'} />
+                  <Text style={[styles.tabText, (selectedTab as any) === 'lists' && styles.tabTextActive]}>
+                    리스트
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
-          {/* Achievements list */}
-          {filteredAchievements.length > 0 ? (
-            <FlatList
-              data={filteredAchievements}
-              keyExtractor={(item) => item.id}
-              renderItem={renderAchievementItem}
-              scrollEnabled={true}
-              nestedScrollEnabled={true}
-              contentContainerStyle={styles.listContent}
-            />
-          ) : (
+              {/* Category filter */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.categoryScroll}
+                contentContainerStyle={styles.categoryScrollContent}
+              >
+                <TouchableOpacity
+                  style={[styles.categoryTab, selectedCategoryId === 'all' && styles.categoryTabActive]}
+                  onPress={() => setSelectedCategoryId('all')}
+                >
+                  <Text style={[styles.categoryName, selectedCategoryId === 'all' && styles.categoryNameActive]}>
+                    전체
+                  </Text>
+                </TouchableOpacity>
+                {categories.map((cat) => {
+                  const catAchievements = achievements.filter((a) => a.categoryId === cat.id);
+                  const isSelected = cat.id === selectedCategoryId;
+                  return (
+                    <TouchableOpacity
+                      key={cat.id}
+                      style={[styles.categoryTab, isSelected && styles.categoryTabActive]}
+                      onPress={() => setSelectedCategoryId(cat.id)}
+                    >
+                      <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+                      <Text style={[styles.categoryName, isSelected && styles.categoryNameActive]}>
+                        {cat.name}
+                      </Text>
+                      {catAchievements.length > 0 && (
+                        <View style={styles.categoryBadge}>
+                          <Text style={styles.categoryBadgeText}>{catAchievements.length}</Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </>
+          }
+          ListEmptyComponent={
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateText}>✦</Text>
               <Text style={styles.emptyStateTitle}>별이 없어요</Text>
               <Text style={styles.emptyStateSubtitle}>새로운 성취 목표를 추가해보세요</Text>
             </View>
-          )}
-        </View>
+          }
+        />
       ) : (
-        <View style={styles.content}>
-          {/* Lists */}
-          {lists.length > 0 ? (
-            <FlatList
-              data={lists}
-              keyExtractor={(item) => item.id}
-              renderItem={renderListItem}
-              scrollEnabled={true}
-              nestedScrollEnabled={true}
-              contentContainerStyle={styles.listContent}
-              numColumns={2}
-              columnWrapperStyle={styles.listGrid}
-            />
-          ) : (
+        <FlatList
+          data={lists}
+          keyExtractor={(item) => item.id}
+          renderItem={renderListItem}
+          scrollEnabled={true}
+          numColumns={2}
+          columnWrapperStyle={styles.listGrid}
+          contentContainerStyle={[
+            styles.listContent,
+            { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 80 },
+          ]}
+          ListHeaderComponent={
+            <>
+              {/* Tab selector */}
+              <View style={styles.tabSelector}>
+                <TouchableOpacity
+                  style={[styles.tab, (selectedTab as any) === 'achievements' && styles.tabActive]}
+                  onPress={() => setSelectedTab('achievements')}
+                >
+                  <IconSymbol name="sparkles" size={18} color={(selectedTab as any) === 'achievements' ? '#F5C842' : '#718096'} />
+                  <Text style={[styles.tabText, (selectedTab as any) === 'achievements' && styles.tabTextActive]}>
+                    별 목록
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.tab, (selectedTab as any) === 'lists' && styles.tabActive]}
+                  onPress={() => setSelectedTab('lists')}
+                >
+                  <IconSymbol name="list.bullet" size={18} color={(selectedTab as any) === 'lists' ? '#F5C842' : '#718096'} />
+                  <Text style={[styles.tabText, (selectedTab as any) === 'lists' && styles.tabTextActive]}>
+                    리스트
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          }
+          ListEmptyComponent={
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateText}>📋</Text>
               <Text style={styles.emptyStateTitle}>리스트가 없어요</Text>
@@ -266,8 +290,8 @@ export default function ListScreen() {
                 <Text style={styles.emptyAddButtonText}>+ 리스트 추가</Text>
               </TouchableOpacity>
             </View>
-          )}
-        </View>
+          }
+        />
       )}
 
       {/* FAB for adding */}
@@ -283,13 +307,14 @@ export default function ListScreen() {
       >
         <IconSymbol name="plus" size={24} color="#0A0E1A" />
       </TouchableOpacity>
-    </ScreenContainer>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollContainer: {
+  root: {
     flex: 1,
+    backgroundColor: '#0A0E1A',
   },
   tabSelector: {
     flexDirection: 'row',
@@ -320,10 +345,6 @@ const styles = StyleSheet.create({
   },
   tabTextActive: {
     color: '#F5C842',
-  },
-  content: {
-    paddingTop: 12,
-    minHeight: 400,
   },
   categoryScroll: {
     maxHeight: 50,
@@ -376,25 +397,26 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 16,
-    paddingBottom: 80,
   },
   listGrid: {
     gap: 12,
-    marginBottom: 12,
+    paddingHorizontal: 0,
   },
   achievementCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     backgroundColor: '#111827',
     borderRadius: 12,
+    marginBottom: 8,
     borderWidth: 1,
     borderColor: '#1E2A3A',
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    marginBottom: 8,
+    gap: 10,
   },
   achievementLeft: {
-    marginRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   achievementContent: {
     flex: 1,
@@ -406,12 +428,12 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   achievementCategory: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#718096',
   },
   achievementRight: {
-    alignItems: 'flex-end',
-    gap: 6,
+    alignItems: 'center',
+    gap: 8,
   },
   achievementCount: {
     fontSize: 12,
@@ -420,17 +442,18 @@ const styles = StyleSheet.create({
   },
   listCard: {
     flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 16,
     backgroundColor: '#111827',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#1E2A3A',
-    padding: 12,
   },
   listCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 10,
+    marginBottom: 12,
     gap: 8,
   },
   listCardTitle: {
@@ -438,11 +461,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: '#E2E8F0',
-    lineHeight: 18,
   },
   listCardProgress: {
     gap: 4,
-    marginBottom: 8,
   },
   listCardProgressBg: {
     height: 4,
@@ -455,15 +476,16 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   listCardProgressText: {
-    fontSize: 10,
+    fontSize: 11,
     color: '#718096',
-    textAlign: 'right',
+    textAlign: 'center',
   },
   completedBadge: {
+    marginTop: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
     backgroundColor: '#22C55E20',
     borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
     alignItems: 'center',
   },
   completedBadgeText: {
@@ -472,42 +494,39 @@ const styles = StyleSheet.create({
     color: '#22C55E',
   },
   emptyState: {
-    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 40,
+    paddingVertical: 60,
   },
   emptyStateText: {
     fontSize: 48,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   emptyStateTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: '#E2E8F0',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   emptyStateSubtitle: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#718096',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 24,
   },
   emptyAddButton: {
-    backgroundColor: '#4ECDC4',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginTop: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#F5C842',
   },
   emptyAddButtonText: {
-    color: '#0A0E1A',
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
+    color: '#0A0E1A',
   },
   fab: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 24,
     right: 20,
     width: 56,
     height: 56,
@@ -516,9 +535,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#F5C842',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 4,
   },
 });
