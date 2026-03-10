@@ -63,76 +63,83 @@ export function useAchievements() {
         createdAt: new Date().toISOString(),
         completionHistory: [],
       };
-      const newData = {
-        ...data,
-        achievements: [...data.achievements, newAchievement],
-      };
-      await saveData(newData);
+      setData((prev) => {
+        const newData = {
+          ...prev,
+          achievements: [...prev.achievements, newAchievement],
+        };
+        saveData(newData).catch((e) => console.error('Failed to save:', e));
+        return newData;
+      });
       return newAchievement;
     },
-    [data, saveData]
+    [saveData]
   );
 
   const completeAchievement = useCallback(
     async (id: string) => {
       const now = new Date().toISOString();
-      const newData = {
-        ...data,
-        achievements: data.achievements.map((a) =>
-          a.id === id
-            ? {
-                ...a,
-                completionCount: a.completionCount + 1,
-                lastCompletedAt: now,
-                completionHistory: [...a.completionHistory, now],
-              }
-            : a
-        ),
-      };
-      await saveData(newData);
+      setData((prev) => {
+        const newData = {
+          ...prev,
+          achievements: prev.achievements.map((a) =>
+            a.id === id
+              ? {
+                  ...a,
+                  completionCount: a.completionCount + 1,
+                  lastCompletedAt: now,
+                  completionHistory: [...a.completionHistory, now],
+                }
+              : a
+          ),
+        };
+        saveData(newData).catch((e) => console.error('Failed to save:', e));
+        return newData;
+      });
     },
-    [data, saveData]
+    [saveData]
   );
 
   const uncompleteAchievement = useCallback(
     async (id: string) => {
-      const newData = {
-        ...data,
-        achievements: data.achievements.map((a) =>
-          a.id === id && a.completionCount > 0
-            ? {
-                ...a,
-                completionCount: a.completionCount - 1,
-                completionHistory: a.completionHistory.slice(0, -1),
-                lastCompletedAt:
-                  a.completionHistory.length > 1
-                    ? a.completionHistory[a.completionHistory.length - 2]
-                    : undefined,
-              }
-            : a
-        ),
-      };
-      await saveData(newData);
+      setData((prev) => {
+        const newData = {
+          ...prev,
+          achievements: prev.achievements.map((a) =>
+            a.id === id && a.completionCount > 0
+              ? {
+                  ...a,
+                  completionCount: a.completionCount - 1,
+                  completionHistory: a.completionHistory.slice(0, -1),
+                  lastCompletedAt:
+                    a.completionHistory.length > 1
+                      ? a.completionHistory[a.completionHistory.length - 2]
+                      : undefined,
+                }
+              : a
+          ),
+        };
+        saveData(newData).catch((e) => console.error('Failed to save:', e));
+        return newData;
+      });
     },
-    [data, saveData]
+    [saveData]
   );
 
   const deleteAchievement = useCallback(
     async (id: string) => {
-      try {
-        const deletedTitle = data.achievements.find((a) => a.id === id)?.title || 'Unknown';
+      setData((prev) => {
+        const deletedTitle = prev.achievements.find((a) => a.id === id)?.title || 'Unknown';
         const newData = {
-          ...data,
-          achievements: data.achievements.filter((a) => a.id !== id),
+          ...prev,
+          achievements: prev.achievements.filter((a) => a.id !== id),
         };
-        await saveData(newData);
+        saveData(newData).catch((e) => console.error('Failed to save:', e));
         console.log('[LOG] 별 삭제 완료:', deletedTitle, '남은 별:', newData.achievements.length);
-      } catch (error) {
-        console.error('Error in deleteAchievement:', error);
-        throw error;
-      }
+        return newData;
+      });
     },
-    [data, saveData]
+    [saveData]
   );
 
   const addCategory = useCallback(
@@ -144,14 +151,17 @@ export function useAchievements() {
         color,
         createdAt: new Date().toISOString(),
       };
-      const newData = {
-        ...data,
-        categories: [...data.categories, newCategory],
-      };
-      await saveData(newData);
+      setData((prev) => {
+        const newData = {
+          ...prev,
+          categories: [...prev.categories, newCategory],
+        };
+        saveData(newData).catch((e) => console.error('Failed to save:', e));
+        return newData;
+      });
       return newCategory;
     },
-    [data, saveData]
+    [saveData]
   );
 
   const getAchievementsByCategory = useCallback(
@@ -177,29 +187,35 @@ export function useAchievements() {
 
   const updateAchievementTitle = useCallback(
     async (id: string, newTitle: string) => {
-      const newData = {
-        ...data,
-        achievements: data.achievements.map((a) =>
-          a.id === id ? { ...a, title: newTitle } : a
-        ),
-      };
-      await saveData(newData);
+      setData((prev) => {
+        const newData = {
+          ...prev,
+          achievements: prev.achievements.map((a) =>
+            a.id === id ? { ...a, title: newTitle } : a
+          ),
+        };
+        saveData(newData).catch((e) => console.error('Failed to save:', e));
+        return newData;
+      });
     },
-    [data, saveData]
+    [saveData]
   );
 
   const reorderAchievements = useCallback(
     async (fromIndex: number, toIndex: number) => {
-      const newAchievements = [...data.achievements];
-      const [movedItem] = newAchievements.splice(fromIndex, 1);
-      newAchievements.splice(toIndex, 0, movedItem);
-      const newData = {
-        ...data,
-        achievements: newAchievements,
-      };
-      await saveData(newData);
+      setData((prev) => {
+        const newAchievements = [...prev.achievements];
+        const [movedItem] = newAchievements.splice(fromIndex, 1);
+        newAchievements.splice(toIndex, 0, movedItem);
+        const newData = {
+          ...prev,
+          achievements: newAchievements,
+        };
+        saveData(newData).catch((e) => console.error('Failed to save:', e));
+        return newData;
+      });
     },
-    [data, saveData]
+    [saveData]
   );
 
   const totalCompletions = data.achievements.reduce((sum, a) => sum + a.completionCount, 0);
