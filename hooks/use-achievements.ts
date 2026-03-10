@@ -38,10 +38,14 @@ export function useAchievements() {
 
   const saveData = useCallback(async (newData: AppData) => {
     try {
+      console.log('[LOG] saveData 시작:', newData.achievements.length, '개 별');
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
+      console.log('[LOG] AsyncStorage 저장 완료');
       setData(newData);
+      console.log('[LOG] setData 완료, 상태 업데이트됨');
     } catch (e) {
       console.error('Failed to save data:', e);
+      throw e;
     }
   }, []);
 

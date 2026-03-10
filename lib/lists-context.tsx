@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { useLists } from '@/hooks/use-lists';
 import { List } from '@/types/list';
 
@@ -20,8 +20,9 @@ const ListsContext = createContext<ListsContextType | undefined>(undefined);
 
 export function ListsProvider({ children }: { children: React.ReactNode }) {
   const listsHook = useLists();
+  const value = useMemo(() => listsHook, [listsHook]);
 
-  return <ListsContext.Provider value={listsHook}>{children}</ListsContext.Provider>;
+  return <ListsContext.Provider value={value}>{children}</ListsContext.Provider>;
 }
 
 export function useListsContext() {

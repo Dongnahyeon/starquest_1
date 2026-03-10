@@ -52,6 +52,7 @@ export default function ListScreen() {
   };
 
   const handleDelete = (achievement: Achievement) => {
+    console.log('[LOG] handleDelete 호출:', achievement.title);
     Alert.alert(
       '별 삭제',
       `"${achievement.title}" 별을 삭제할까요?`,
@@ -62,7 +63,9 @@ export default function ListScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
+              console.log('[LOG] 삭제 버튼 클릭:', achievement.id);
               await deleteAchievement(achievement.id);
+              console.log('[LOG] deleteAchievement 완료');
               if (Platform.OS !== 'web') {
                 await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               }
