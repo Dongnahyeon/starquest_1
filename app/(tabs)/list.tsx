@@ -162,6 +162,7 @@ export default function ListScreen() {
     <View style={styles.root}>
       {selectedTab === 'achievements' ? (
         <FlatList
+          key="achievements-list"
           data={filteredAchievements}
           keyExtractor={(item) => item.id}
           renderItem={renderAchievementItem}
@@ -243,6 +244,7 @@ export default function ListScreen() {
         />
       ) : (
         <FlatList
+          key="lists-grid"
           data={lists}
           keyExtractor={(item) => item.id}
           renderItem={renderListItem}
