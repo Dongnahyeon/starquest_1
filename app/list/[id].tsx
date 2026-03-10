@@ -160,9 +160,9 @@ export default function ListDetailScreen() {
             if (list) {
               try {
                 await deleteList(list.id);
-                setTimeout(() => {
-                  router.back();
-                }, 100);
+                // 더 내구성 있는 지연 추가
+                await new Promise(resolve => setTimeout(resolve, 200));
+                router.back();
               } catch (error) {
                 console.error('Delete error:', error);
                 Alert.alert('오류', '리스트 삭제에 실패했습니다.');
@@ -363,14 +363,20 @@ export default function ListDetailScreen() {
                   </View>
                 </TouchableOpacity>
 
-                <Text
-                  style={[
-                    styles.itemTitle,
-                    item.completed && styles.itemTitleCompleted,
-                  ]}
-                >
-                  {item.title}
-                </Text>
+                <View style={styles.itemContent}>
+                  <Text
+                    style={[
+                      styles.itemTitle,
+                      item.completed && styles.itemTitleCompleted,
+                    ]}
+                  >
+                    {item.title}
+                  </Text>
+                  <Text style={styles.itemTime}>
+                    생성: {new Date(item.createdAt).toLocaleString('ko-KR')}
+                    {item.completedAt && `\n완수: ${new Date(item.completedAt).toLocaleString('ko-KR')}`}
+                  </Text>
+                </View>
 
                 <TouchableOpacity
                   style={styles.deleteItemButton}
@@ -654,10 +660,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  itemTitle: {
+  itemContent: {
     flex: 1,
+  },
+  itemTitle: {
     fontSize: 15,
     color: '#E2E8F0',
+    marginBottom: 4,
+  },
+  itemTime: {
+    fontSize: 11,
+    color: '#718096',
+    lineHeight: 16,
   },
   itemTitleCompleted: {
     color: '#718096',

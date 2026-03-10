@@ -8,6 +8,7 @@ export interface Achievement {
   createdAt: string;
   lastCompletedAt?: string;
   completionHistory: string[]; // ISO date strings
+  dynamicName?: string; // 별 색상에 따라 동적으로 변경되는 이름
 }
 
 export interface Category {
@@ -64,3 +65,26 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'social', name: '소통', emoji: '💬', color: '#F6E05E', createdAt: new Date().toISOString() },
   { id: 'other', name: '기타', emoji: '⭐', color: '#A0AEC0', createdAt: new Date().toISOString() },
 ];
+
+// 별 색상에 따른 동적 이름 반환
+export function getStarDynamicName(completionCount: number): string {
+  const names = [
+    '미완성 별',           // 0: 회색
+    '희미한 별',           // 1: 주황색
+    '가느다란 반짝임',     // 2-15: 빨강색
+    '조그만 빛',           // 16-63: 파랑색
+    '은은한 별빛',         // 64-255: 사백색
+    '또렷해지는 광채',     // 256-1023: 노랑색
+    '부드럽게 퍼지는 빛',  // 1024-4095: 보라색
+    '선명하게 타오르는 별빛', // 4096+: 밝은 보라
+  ];
+  
+  if (completionCount === 0) return names[0];
+  if (completionCount === 1) return names[1];
+  if (completionCount < 16) return names[2];
+  if (completionCount < 64) return names[3];
+  if (completionCount < 256) return names[4];
+  if (completionCount < 1024) return names[5];
+  if (completionCount < 4096) return names[6];
+  return names[7];
+}

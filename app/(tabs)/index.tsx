@@ -63,6 +63,21 @@ export default function HomeScreen() {
         {/* Nebula effects */}
         <View style={[styles.nebula, styles.nebula1]} />
         <View style={[styles.nebula, styles.nebula2]} />
+        
+        {/* Twinkling stars */}
+        {[...Array(30)].map((_, i) => (
+          <Animated.View
+            key={`star-${i}`}
+            style={[
+              styles.twinklingStar,
+              {
+                left: `${(i * 13 + 7) % 100}%`,
+                top: `${(i * 17 + 11) % 100}%`,
+                opacity: 0.3 + (Math.sin(i * 0.5) * 0.3),
+              },
+            ]}
+          />
+        ))}
       </View>
 
       <ScrollView style={[styles.container, { paddingTop: insets.top + 8 }]} showsVerticalScrollIndicator={false}>
@@ -90,20 +105,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Progress bar */}
-        {totalStars > 0 && (
-          <View style={styles.progressSection}>
-            <View style={styles.progressHeader}>
-              <Text style={styles.progressLabel}>전체 진행률</Text>
-              <Text style={styles.progressCount}>
-                {completedStars} / {totalStars} 별
-              </Text>
-            </View>
-            <View style={styles.progressBarBg}>
-              <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
-            </View>
-          </View>
-        )}
+        {/* Progress bar - REMOVED */}
 
         {/* Category tabs */}
         <ScrollView
@@ -259,6 +261,13 @@ const styles = StyleSheet.create({
     opacity: 0.05,
     bottom: 100,
     right: -80,
+  },
+  twinklingStar: {
+    position: 'absolute',
+    width: 2,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: '#FFFFFF',
   },
   container: {
     flex: 1,

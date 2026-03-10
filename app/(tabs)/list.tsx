@@ -323,8 +323,8 @@ const styles = StyleSheet.create({
     color: '#F5C842',
   },
   content: {
-    flex: 1,
     paddingTop: 12,
+    minHeight: 400,
   },
   categoryScroll: {
     maxHeight: 50,

@@ -103,9 +103,9 @@ export default function DetailScreen() {
             if (achievement) {
               try {
                 await deleteAchievement(achievement.id);
-                setTimeout(() => {
-                  router.back();
-                }, 100);
+                // 더 내구성 있는 지연 추가
+                await new Promise(resolve => setTimeout(resolve, 200));
+                router.back();
               } catch (error) {
                 console.error('Delete error:', error);
                 Alert.alert('오류', '별 삭제에 실패했습니다.');
