@@ -260,6 +260,27 @@ export function useLists() {
     [lists]
   );
 
+  // 리스트 순서 변경
+  const reorderLists = useCallback(
+    async (fromIndex: number, toIndex: number) => {
+      try {
+        setLists((prev) => {
+          const updated = [...prev];
+          const [removed] = updated.splice(fromIndex, 1);
+          updated.splice(toIndex, 0, removed);
+          saveLists(updated).catch((error) => {
+            console.error('Failed to reorder lists:', error);
+          });
+          return updated;
+        });
+      } catch (error) {
+        console.error('Error in reorderLists:', error);
+        throw error;
+      }
+    },
+    [saveLists]
+  );
+
   // 초기 로드
   useEffect(() => {
     loadLists();
@@ -279,6 +300,7 @@ export function useLists() {
     deleteListItem,
     deleteList,
     reorderListItems,
+    reorderLists,
     getListById,
     getListsByCategory,
   };

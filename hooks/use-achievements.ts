@@ -164,6 +164,20 @@ export function useAchievements() {
     [data.achievements]
   );
 
+  const reorderAchievements = useCallback(
+    async (fromIndex: number, toIndex: number) => {
+      const newAchievements = [...data.achievements];
+      const [movedItem] = newAchievements.splice(fromIndex, 1);
+      newAchievements.splice(toIndex, 0, movedItem);
+      const newData = {
+        ...data,
+        achievements: newAchievements,
+      };
+      await saveData(newData);
+    },
+    [data, saveData]
+  );
+
   const totalCompletions = data.achievements.reduce((sum, a) => sum + a.completionCount, 0);
   const totalAchievements = data.achievements.length;
 
@@ -179,6 +193,7 @@ export function useAchievements() {
     getAchievementsByCategory,
     getCategoryById,
     getAchievementById,
+    reorderAchievements,
     totalCompletions,
     totalAchievements,
     reload: loadData,
