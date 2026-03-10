@@ -249,6 +249,7 @@ export default function ListScreen() {
               keyExtractor={(item) => item.id}
               renderItem={renderListItem}
               scrollEnabled={true}
+              nestedScrollEnabled={true}
               contentContainerStyle={styles.listContent}
               numColumns={2}
               columnWrapperStyle={styles.listGrid}
