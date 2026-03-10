@@ -11,6 +11,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Dimensions,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,6 +20,8 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useAchievementsContext } from '@/lib/achievements-context';
 import { useListsContext } from '@/lib/lists-context';
 import { getListStarColor, getListStarGlowIntensity } from '@/types/list';
+
+const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 export default function ListDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -38,6 +41,7 @@ export default function ListDetailScreen() {
   const [showItemNoteModal, setShowItemNoteModal] = useState(false);
   const [selectedItemNote, setSelectedItemNote] = useState('');
   const [selectedItemTitle, setSelectedItemTitle] = useState('');
+  const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
 
   const starScale = useRef(new Animated.Value(1)).current;
   const starGlow = useRef(new Animated.Value(0)).current;
@@ -142,8 +146,8 @@ export default function ListDetailScreen() {
     setShowItemNoteModal(true);
   };
 
-  const handleDeleteItem = (itemId: string) => {
-    Alert.alert('항목 삭제', '이 항목을 삭제할까요?', [
+  const handleDeleteItem = (itemId: string, itemTitle: string) => {
+    Alert.alert('항목 삭제', `"${itemTitle}" 항목을 삭제할까요?`, [
       { text: '취소', style: 'cancel' },
       {
         text: '삭제',
@@ -157,21 +161,30 @@ export default function ListDetailScreen() {
     ]);
   };
 
-  const handleMoveItem = (itemId: string, direction: 'up' | 'down') => {
-    if (!list) return;
-    const currentIndex = list.items.findIndex(i => i.id === itemId);
-    if (currentIndex === -1) return;
-    
-    let newIndex = currentIndex;
-    if (direction === 'up' && currentIndex > 0) {
-      newIndex = currentIndex - 1;
-    } else if (direction === 'down' && currentIndex < list.items.length - 1) {
-      newIndex = currentIndex + 1;
-    } else {
+  const handleStartDrag = (itemId: string) => {
+    setDraggedItemId(itemId);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+  };
+
+  const handleDropItem = (targetItemId: string) => {
+    if (!draggedItemId || !list || draggedItemId === targetItemId) {
+      setDraggedItemId(null);
       return;
     }
-    
-    reorderListItems(list.id, currentIndex, newIndex);
+
+    const draggedIndex = list.items.findIndex(i => i.id === draggedItemId);
+    const targetIndex = list.items.findIndex(i => i.id === targetItemId);
+
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+      reorderListItems(list.id, draggedIndex, targetIndex);
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    }
+
+    setDraggedItemId(null);
   };
 
   const handleDeleteList = () => {
@@ -187,7 +200,6 @@ export default function ListDetailScreen() {
             if (list) {
               try {
                 await deleteList(list.id);
-                // 더 내구성 있는 지연 추가
                 await new Promise(resolve => setTimeout(resolve, 200));
                 router.back();
               } catch (error) {
@@ -235,230 +247,227 @@ export default function ListDetailScreen() {
         />
       </View>
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={[styles.container, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 40 }]}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <IconSymbol name="arrow.left" size={24} color="#E2E8F0" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteList}>
-            <IconSymbol name="trash.fill" size={20} color="#FC8181" />
-          </TouchableOpacity>
-        </View>
+      <FlatList
+        data={list.items}
+        keyExtractor={(item) => item.id}
+        scrollEnabled={true}
+        nestedScrollEnabled={true}
+        contentContainerStyle={[
+          styles.container,
+          { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 100 },
+        ]}
+        ListHeaderComponent={
+          <>
+            {/* Header */}
+            <View style={styles.header}>
+              <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                <IconSymbol name="arrow.left" size={24} color="#E2E8F0" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteList}>
+                <IconSymbol name="trash.fill" size={20} color="#FC8181" />
+              </TouchableOpacity>
+            </View>
 
-        {/* Category badge */}
-        {category && (
-          <View style={[styles.categoryBadge, { backgroundColor: `${category.color}25`, borderColor: `${category.color}50` }]}>
-            <Text style={styles.categoryEmoji}>{category.emoji}</Text>
-            <Text style={[styles.categoryName, { color: category.color }]}>{category.name}</Text>
-          </View>
-        )}
+            {/* Category badge */}
+            {category && (
+              <View style={[styles.categoryBadge, { backgroundColor: `${category.color}25`, borderColor: `${category.color}50` }]}>
+                <Text style={styles.categoryEmoji}>{category.emoji}</Text>
+                <Text style={[styles.categoryName, { color: category.color }]}>{category.name}</Text>
+              </View>
+            )}
 
-        {/* Star visualization */}
-        <View style={styles.starSection}>
-          {glowIntensity > 0 && (
-            <>
-              <Animated.View
-                style={[
-                  styles.glowRing,
-                  {
-                    width: 200,
-                    height: 200,
-                    borderRadius: 100,
-                    backgroundColor: starColor,
-                    opacity: Animated.multiply(starGlow, 0.08),
-                    transform: [{ scale: starScale }],
-                  },
-                ]}
-              />
-              <Animated.View
-                style={[
-                  styles.glowRing,
-                  {
-                    width: 140,
-                    height: 140,
-                    borderRadius: 70,
-                    backgroundColor: starColor,
-                    opacity: Animated.multiply(starGlow, 0.15),
-                    transform: [{ scale: starScale }],
-                  },
-                ]}
-              />
-            </>
-          )}
-          <Animated.Text
-            style={[
-              styles.starEmoji,
-              {
-                color: starColor,
-                textShadowColor: starColor,
-                textShadowRadius: glowIntensity * 30,
-                transform: [{ scale: starScale }],
-              },
-            ]}
-          >
-            📋
-          </Animated.Text>
-        </View>
-
-        {/* Title */}
-        <Text style={styles.title}>{list.title}</Text>
-
-        {/* Description */}
-        {list.description && <Text style={styles.description}>{list.description}</Text>}
-
-        {/* Progress bar */}
-        <View style={styles.progressSection}>
-          <View style={styles.progressHeader}>
-            <Text style={styles.progressLabel}>진행 상황</Text>
-            <Text style={[styles.progressPercent, { color: starColor }]}>{completionPercentage}%</Text>
-          </View>
-          <View style={styles.progressBarBg}>
-            <Animated.View
-              style={[
-                styles.progressBarFill,
-                {
-                  width: `${completionPercentage}%`,
-                  backgroundColor: starColor,
-                },
-              ]}
-            />
-          </View>
-          <Text style={styles.progressCount}>
-            {list.completionCount} / {list.totalCount}개 완료
-          </Text>
-        </View>
-
-        {/* Add item input */}
-        <View style={styles.addItemSection}>
-          <View style={styles.addItemRow}>
-            <TextInput
-              style={styles.addItemInput}
-              placeholder="새 항목 추가..."
-              placeholderTextColor="#4A5568"
-              value={newItemTitle}
-              onChangeText={setNewItemTitle}
-              returnKeyType="done"
-              onSubmitEditing={handleAddItem}
-              editable={!isAddingItem}
-            />
-            <TouchableOpacity
-              style={[
-                styles.addItemButton,
-                (!newItemTitle.trim() || isAddingItem) && styles.addItemButtonDisabled,
-              ]}
-              onPress={handleAddItem}
-            >
-              {isAddingItem ? (
-                <ActivityIndicator size="small" color="#0A0E1A" />
-              ) : (
-                <IconSymbol name="plus" size={18} color="#0A0E1A" />
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Items list */}
-        {list.items.length > 0 ? (
-          <View style={styles.itemsSection}>
-            <Text style={styles.itemsTitle}>항목 ({list.items.length})</Text>
-            {list.items.map((item, index) => (
-              <View key={item.id} style={styles.itemRow}>
-                <TouchableOpacity
-                  style={styles.checkboxContainer}
-                  onPress={() => handleToggleItem(item.id)}
-                  activeOpacity={0.7}
-                >
-                  <View
+            {/* Star visualization */}
+            <View style={styles.starSection}>
+              {glowIntensity > 0 && (
+                <>
+                  <Animated.View
                     style={[
-                      styles.checkbox,
-                      item.completed && {
+                      styles.glowRing,
+                      {
+                        width: 200,
+                        height: 200,
+                        borderRadius: 100,
                         backgroundColor: starColor,
-                        borderColor: starColor,
+                        opacity: Animated.multiply(starGlow, 0.08),
+                        transform: [{ scale: starScale }],
                       },
                     ]}
-                  >
-                    {item.completed && (
-                      <IconSymbol name="checkmark" size={14} color="#0A0E1A" />
-                    )}
-                  </View>
-                </TouchableOpacity>
+                  />
+                  <Animated.View
+                    style={[
+                      styles.glowRing,
+                      {
+                        width: 140,
+                        height: 140,
+                        borderRadius: 70,
+                        backgroundColor: starColor,
+                        opacity: Animated.multiply(starGlow, 0.15),
+                        transform: [{ scale: starScale }],
+                      },
+                    ]}
+                  />
+                </>
+              )}
+              <Animated.Text
+                style={[
+                  styles.starEmoji,
+                  {
+                    color: starColor,
+                    textShadowColor: starColor,
+                    textShadowRadius: glowIntensity * 30,
+                    transform: [{ scale: starScale }],
+                  },
+                ]}
+              >
+                📋
+              </Animated.Text>
+            </View>
 
-                <View style={styles.itemContent}>
-                  <Text style={styles.itemTitle}>
-                    {item.title}
-                  </Text>
-                  <Text style={styles.itemTime}>
-                    생성: {new Date(item.createdAt).toLocaleString('ko-KR')}
-                    {item.completedAt && `\n완수: ${new Date(item.completedAt).toLocaleString('ko-KR')}`}
-                  </Text>
-                </View>
+            {/* Title */}
+            <Text style={styles.title}>{list.title}</Text>
 
-                <View style={styles.itemActions}>
-                  {item.completionNote && (
-                    <TouchableOpacity
-                      style={styles.noteButton}
-                      onPress={() => handleViewNote(item.id, item.title, item.completionNote || '')}
-                      activeOpacity={0.7}
-                    >
-                      <IconSymbol name="note.text" size={16} color="#A0AEC0" />
-                    </TouchableOpacity>
-                  )}
-                  
-                  <View style={styles.orderButtons}>
-                    {index > 0 && (
-                      <TouchableOpacity
-                        style={styles.orderButton}
-                        onPress={() => handleMoveItem(item.id, 'up')}
-                        activeOpacity={0.7}
-                      >
-                        <IconSymbol name="arrow.up" size={14} color="#718096" />
-                      </TouchableOpacity>
-                    )}
-                    {index < list.items.length - 1 && (
-                      <TouchableOpacity
-                        style={styles.orderButton}
-                        onPress={() => handleMoveItem(item.id, 'down')}
-                        activeOpacity={0.7}
-                      >
-                        <IconSymbol name="arrow.down" size={14} color="#718096" />
-                      </TouchableOpacity>
-                    )}
-                  </View>
+            {/* Description */}
+            {list.description && <Text style={styles.description}>{list.description}</Text>}
 
-                  <TouchableOpacity
-                    style={styles.deleteItemButton}
-                    onPress={() => handleDeleteItem(item.id)}
-                    activeOpacity={0.7}
-                  >
-                    <IconSymbol name="xmark" size={16} color="#FC8181" />
-                  </TouchableOpacity>
-                </View>
+            {/* Progress bar */}
+            <View style={styles.progressSection}>
+              <View style={styles.progressHeader}>
+                <Text style={styles.progressLabel}>진행 상황</Text>
+                <Text style={[styles.progressPercent, { color: starColor }]}>{completionPercentage}%</Text>
               </View>
-            ))}
-          </View>
-        ) : (
+              <View style={styles.progressBarBg}>
+                <Animated.View
+                  style={[
+                    styles.progressBarFill,
+                    {
+                      width: `${completionPercentage}%`,
+                      backgroundColor: starColor,
+                    },
+                  ]}
+                />
+              </View>
+              <Text style={styles.progressCount}>
+                {list.completionCount} / {list.totalCount}개 완료
+              </Text>
+            </View>
+
+            {/* Add item input */}
+            <View style={styles.addItemSection}>
+              <View style={styles.addItemRow}>
+                <TextInput
+                  style={styles.addItemInput}
+                  placeholder="새 항목 추가..."
+                  placeholderTextColor="#4A5568"
+                  value={newItemTitle}
+                  onChangeText={setNewItemTitle}
+                  returnKeyType="done"
+                  onSubmitEditing={handleAddItem}
+                  editable={!isAddingItem}
+                />
+                <TouchableOpacity
+                  style={[
+                    styles.addItemButton,
+                    (!newItemTitle.trim() || isAddingItem) && styles.addItemButtonDisabled,
+                  ]}
+                  onPress={handleAddItem}
+                >
+                  {isAddingItem ? (
+                    <ActivityIndicator size="small" color="#0A0E1A" />
+                  ) : (
+                    <IconSymbol name="plus" size={18} color="#0A0E1A" />
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Items title */}
+            {list.items.length > 0 && (
+              <Text style={styles.itemsTitle}>항목 ({list.items.length}) - 드래그로 순서 변경</Text>
+            )}
+          </>
+        }
+        renderItem={({ item, index }) => (
+          <TouchableOpacity
+            style={[
+              styles.itemRow,
+              draggedItemId === item.id && styles.itemRowDragging,
+            ]}
+            onLongPress={() => handleStartDrag(item.id)}
+            onPress={() => draggedItemId && handleDropItem(item.id)}
+            activeOpacity={0.7}
+          >
+            <TouchableOpacity
+              style={styles.checkboxContainer}
+              onPress={() => handleToggleItem(item.id)}
+              activeOpacity={0.7}
+            >
+              <View
+                style={[
+                  styles.checkbox,
+                  item.completed && {
+                    backgroundColor: starColor,
+                    borderColor: starColor,
+                  },
+                ]}
+              >
+                {item.completed && (
+                  <IconSymbol name="checkmark" size={14} color="#0A0E1A" />
+                )}
+              </View>
+            </TouchableOpacity>
+
+            <View style={styles.itemContent}>
+              <Text style={styles.itemTitle}>
+                {item.title}
+              </Text>
+              <Text style={styles.itemTime}>
+                생성: {new Date(item.createdAt).toLocaleString('ko-KR')}
+                {item.completedAt && `\n완수: ${new Date(item.completedAt).toLocaleString('ko-KR')}`}
+              </Text>
+            </View>
+
+            <View style={styles.itemActions}>
+              {item.completionNote && (
+                <TouchableOpacity
+                  style={styles.noteButton}
+                  onPress={() => handleViewNote(item.id, item.title, item.completionNote || '')}
+                  activeOpacity={0.7}
+                >
+                  <IconSymbol name="note.text" size={16} color="#A0AEC0" />
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity
+                style={styles.deleteItemButton}
+                onPress={() => handleDeleteItem(item.id, item.title)}
+                activeOpacity={0.7}
+              >
+                <IconSymbol name="xmark" size={16} color="#FC8181" />
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        )}
+        ListEmptyComponent={
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateEmoji}>📭</Text>
             <Text style={styles.emptyStateText}>아직 항목이 없어요</Text>
             <Text style={styles.emptyStateHint}>위에서 항목을 추가해보세요</Text>
           </View>
-        )}
-
-        {/* Completion message */}
-        {list.isCompleted && list.totalCount > 0 && (
-          <View style={[styles.completionBanner, { backgroundColor: `${starColor}20`, borderColor: `${starColor}40` }]}>
-            <Text style={styles.completionEmoji}>🎉</Text>
-            <Text style={[styles.completionText, { color: starColor }]}>
-              모든 항목을 완료했어요!
-            </Text>
-          </View>
-        )}
-      </ScrollView>
+        }
+        ListFooterComponent={
+          <>
+            {/* Completion message */}
+            {list.isCompleted && list.totalCount > 0 && (
+              <View style={[styles.completionBanner, { backgroundColor: `${starColor}20`, borderColor: `${starColor}40` }]}>
+                <Text style={styles.completionEmoji}>🎉</Text>
+                <Text style={[styles.completionText, { color: starColor }]}>
+                  모든 항목을 완료했어요!
+                </Text>
+              </View>
+            )}
+          </>
+        }
+      />
       
       {/* Note Modal - 완료 메모 입력 */}
       {showNoteModal && (
@@ -542,9 +551,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-  },
-  scrollView: {
-    flex: 1,
   },
   container: {
     paddingHorizontal: 20,
@@ -695,9 +701,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#2D3748',
     shadowOpacity: 0,
   },
-  itemsSection: {
-    marginBottom: 24,
-  },
   itemsTitle: {
     fontSize: 13,
     fontWeight: '700',
@@ -717,6 +720,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#1E2A3A',
     gap: 10,
+  },
+  itemRowDragging: {
+    backgroundColor: '#1E2A3A',
+    borderColor: '#4ECDC4',
+    opacity: 0.8,
   },
   checkboxContainer: {
     padding: 4,
@@ -754,18 +762,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  orderButtons: {
-    flexDirection: 'row',
-    gap: 2,
-  },
-  orderButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#1E2A3A',
   },
   deleteItemButton: {
     width: 32,
