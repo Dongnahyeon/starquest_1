@@ -161,35 +161,39 @@ export function useLists() {
   const deleteListItem = useCallback(
     async (listId: string, itemId: string) => {
       try {
-        const updated = lists.map((list) => {
-          if (list.id === listId) {
-            const updatedItems = list.items.filter((i) => i.id !== itemId);
-            const wasCompleted = list.items.find((i) => i.id === itemId)?.completed ?? false;
-            const completionCount = wasCompleted ? list.completionCount - 1 : list.completionCount;
-            const totalCount = list.totalCount - 1;
-            const isCompleted = completionCount === totalCount && totalCount > 0;
+        setLists((prev) => {
+          const updated = prev.map((list) => {
+            if (list.id === listId) {
+              const updatedItems = list.items.filter((i) => i.id !== itemId);
+              const wasCompleted = list.items.find((i) => i.id === itemId)?.completed ?? false;
+              const completionCount = wasCompleted ? list.completionCount - 1 : list.completionCount;
+              const totalCount = list.totalCount - 1;
+              const isCompleted = completionCount === totalCount && totalCount > 0;
 
-            console.log(`[LOG] 항목 삭제: "${list.items.find((i) => i.id === itemId)?.title}" from "${list.title}"`);
+              console.log(`[LOG] 항목 삭제: "${list.items.find((i) => i.id === itemId)?.title}" from "${list.title}"`);
 
-            return {
-              ...list,
-              items: updatedItems,
-              completionCount,
-              totalCount,
-              isCompleted,
-              updatedAt: new Date().toISOString(),
-            };
-          }
-          return list;
+              return {
+                ...list,
+                items: updatedItems,
+                completionCount,
+                totalCount,
+                isCompleted,
+                updatedAt: new Date().toISOString(),
+              };
+            }
+            return list;
+          });
+          saveLists(updated).catch((error) => {
+            console.error('Failed to delete list item:', error);
+          });
+          return updated;
         });
-        setLists(updated);
-        await saveLists(updated);
       } catch (error) {
         console.error('Error in deleteListItem:', error);
         throw error;
       }
     },
-    [lists, saveLists]
+    [saveLists]
   );
 
   // 리스트 삭제

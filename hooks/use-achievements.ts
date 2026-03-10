@@ -120,19 +120,24 @@ export function useAchievements() {
   const deleteAchievement = useCallback(
     async (id: string) => {
       try {
-        const deletedTitle = data.achievements.find((a) => a.id === id)?.title || 'Unknown';
-        const newData = {
-          ...data,
-          achievements: data.achievements.filter((a) => a.id !== id),
-        };
-        await saveData(newData);
-        console.log('[LOG] 별 삭제 완료:', deletedTitle, '남은 별:', newData.achievements.length);
+        setData((prev) => {
+          const deletedTitle = prev.achievements.find((a) => a.id === id)?.title || 'Unknown';
+          const newData = {
+            ...prev,
+            achievements: prev.achievements.filter((a) => a.id !== id),
+          };
+          saveData(newData).catch((error) => {
+            console.error('Failed to save after delete:', error);
+          });
+          console.log('[LOG] 별 삭제 완료:', deletedTitle, '남은 별:', newData.achievements.length);
+          return newData;
+        });
       } catch (error) {
         console.error('Error in deleteAchievement:', error);
         throw error;
       }
     },
-    [data, saveData]
+    [saveData]
   );
 
   const addCategory = useCallback(
