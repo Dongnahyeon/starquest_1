@@ -515,10 +515,8 @@ export default function ListDetailScreen() {
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity
+            <View
               style={styles.itemContent}
-              onPress={() => handleViewItemDetail(item.id, item.title, item.completionNote || '')}
-              activeOpacity={0.7}
             >
               <Text style={styles.itemTitle}>
                 {item.title}
@@ -532,9 +530,27 @@ export default function ListDetailScreen() {
                   메모: {item.completionNote}
                 </Text>
               )}
-            </TouchableOpacity>
+            </View>
 
-            {/* 아이콘 제거됨 */}
+            {/* 아이콘 */}
+            {!item.completed && (
+              <View style={styles.itemIconsContainer}>
+                <TouchableOpacity
+                  style={styles.itemIcon}
+                  onPress={() => handleEditItem(item.id, item.title)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.itemIconText}>✏️</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.itemIcon}
+                  onPress={() => handleDeleteItem(item.id, item.title)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.itemIconText}>🗑️</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </TouchableOpacity>
         )}
         ListEmptyComponent={
@@ -1093,6 +1109,21 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     marginTop: 4,
     fontStyle: 'italic',
+  },
+  itemIconsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  itemIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  itemIconText: {
+    fontSize: 18,
   },
   itemActions: {
     flexDirection: 'row',
