@@ -7,6 +7,7 @@ export interface ListItem {
   listId: string;
   title: string;
   completed: boolean;
+  note?: string; // 일반 메모
   completedAt?: string; // ISO 8601 format
   completionNote?: string; // 완수 시 작성한 메모
   createdAt: string;

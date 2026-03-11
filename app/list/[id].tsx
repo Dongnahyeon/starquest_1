@@ -525,9 +525,14 @@ export default function ListDetailScreen() {
                 생성: {new Date(item.createdAt).toLocaleString('ko-KR')}
                 {item.completedAt && `\n완수: ${new Date(item.completedAt).toLocaleString('ko-KR')}`}
               </Text>
+              {item.note && (
+                <Text style={styles.itemNote}>
+                  메모: {item.note}
+                </Text>
+              )}
               {item.completionNote && (
                 <Text style={styles.itemNote}>
-                  메모: {item.completionNote}
+                  완수 메모: {item.completionNote}
                 </Text>
               )}
             </View>
@@ -1300,5 +1305,17 @@ const styles = StyleSheet.create({
     color: '#E2E8F0',
     fontSize: 15,
     marginBottom: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: '#A0AEC0',
+    marginBottom: 20,
+    lineHeight: 24,
   },
 });

@@ -90,6 +90,7 @@ export function useLists() {
     async (listId: string, title: string) => {
       const newItem: ListItem = {
         id: `item_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        listId,
         title,
         completed: false,
         note: '',
