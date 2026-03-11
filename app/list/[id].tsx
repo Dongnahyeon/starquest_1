@@ -28,7 +28,7 @@ export default function ListDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { getCategoryById } = useAchievementsContext();
-  const { getListById, addListItem, toggleListItem, deleteListItem, deleteList, reorderListItems, updateListItemTitle, updateListItemNote } = useListsContext();
+  const { getListById, addListItem, toggleListItem, deleteListItem, deleteList, reorderListItems, updateListItemTitle, updateListItemNote, updateListTitle } = useListsContext();
 
   const list = getListById(id);
   const category = list ? getCategoryById(list.categoryId) : null;
@@ -271,7 +271,6 @@ export default function ListDetailScreen() {
   const handleSaveEditListTitle = async () => {
     if (!editListText.trim() || !list) return;
     try {
-      const { updateListTitle } = useListsContext();
       await updateListTitle(list.id, editListText.trim());
       setShowEditListModal(false);
       setEditListText('');
