@@ -88,6 +88,7 @@ export default function ListDetailScreen() {
     
     // 완료 상태로 변경할 때만 메모 입력 모달 표시
     if (!item.completed) {
+      setShowItemNoteModal(false); // 기존 메모 수정 모달 닫기
       setSelectedItemId(itemId);
       setNoteText('');
       setShowNoteModal(true);
