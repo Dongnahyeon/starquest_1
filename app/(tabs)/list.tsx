@@ -38,11 +38,11 @@ export default function ListScreen() {
 
   const filteredAchievements =
     selectedCategoryId === 'all'
-      ? achievements
-      : achievements.filter((a) => a.categoryId === selectedCategoryId);
+      ? (achievements && Array.isArray(achievements) ? achievements : [])
+      : (achievements && Array.isArray(achievements) ? achievements.filter((a) => a.categoryId === selectedCategoryId) : []);
 
   // Group by category
-  const grouped = (categories && Array.isArray(categories))
+  const grouped = (categories && Array.isArray(categories) && filteredAchievements && Array.isArray(filteredAchievements))
     ? categories
         .map((cat) => ({
           category: cat,
@@ -151,7 +151,7 @@ export default function ListScreen() {
   };
 
   const handleMoveAchievementDown = async (index: number) => {
-    if (index < filteredAchievements.length - 1) {
+    if (filteredAchievements && Array.isArray(filteredAchievements) && index < filteredAchievements.length - 1) {
       await reorderAchievements(index, index + 1);
       if (Platform.OS !== 'web') {
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -179,8 +179,8 @@ export default function ListScreen() {
 
   const renderAchievementItem = ({ item, index }: { item: Achievement; index: number }) => {
     const isJustCompleted = justCompleted === item.id;
-    const category = categories.find((c) => c.id === item.categoryId);
-    const achievementIndex = filteredAchievements.findIndex((a) => a.id === item.id);
+    const category = (categories && Array.isArray(categories)) ? categories.find((c) => c.id === item.categoryId) : undefined;
+    const achievementIndex = (filteredAchievements && Array.isArray(filteredAchievements)) ? filteredAchievements.findIndex((a) => a.id === item.id) : -1;
 
     return (
       <TouchableOpacity
