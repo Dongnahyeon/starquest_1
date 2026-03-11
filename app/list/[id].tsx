@@ -92,19 +92,22 @@ export default function ListDetailScreen() {
       // 모든 모달을 먼저 닫기
       setShowItemDetailModal(false);
       setShowItemNoteModal(false);
+      setShowEditItemModal(false);
       setShowNoteModal(false);
       
       // 상태 초기화
       setSelectedItemId(null);
       setNoteText('');
       setSelectedItemNote('');
+      setEditingItemId(null);
+      setEditItemText('');
       
       // 새로운 모달 열기
       setTimeout(() => {
         setSelectedItemId(itemId);
         setNoteText('');
         setShowNoteModal(true);
-      }, 50);
+      }, 100);
       return;
     }
     
