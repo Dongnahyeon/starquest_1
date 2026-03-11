@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useContext } from 'react';
 import { useAchievements } from '@/hooks/use-achievements';
 
 type AchievementsContextType = ReturnType<typeof useAchievements>;
@@ -7,9 +7,8 @@ const AchievementsContext = createContext<AchievementsContextType | null>(null);
 
 export function AchievementsProvider({ children }: { children: React.ReactNode }) {
   const achievements = useAchievements();
-  const value = useMemo(() => achievements, [achievements]);
   return (
-    <AchievementsContext.Provider value={value}>
+    <AchievementsContext.Provider value={achievements}>
       {children}
     </AchievementsContext.Provider>
   );
