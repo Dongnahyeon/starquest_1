@@ -26,7 +26,6 @@ export default function AddListScreen() {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(categories[0]?.id ?? 'other');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,7 +39,7 @@ export default function AddListScreen() {
     }
 
     try {
-      await createList(title.trim(), description.trim() || undefined, selectedCategoryId);
+      await createList(title.trim());
       console.log('List created successfully');
       setIsSaving(false);
       router.back();
@@ -116,7 +115,8 @@ export default function AddListScreen() {
           <View style={styles.categorySection}>
             <Text style={styles.sectionLabel}>카테고리 선택</Text>
             <View style={styles.categoryGrid}>
-              {categories.map((cat) => {
+              {/* Category selection is not needed for lists */}
+          {/* {categories.map((cat) => {
                 const isSelected = selectedCategoryId === cat.id;
                 return (
                   <TouchableOpacity
@@ -143,9 +143,9 @@ export default function AddListScreen() {
                     {isSelected && (
                       <IconSymbol name="checkmark.circle.fill" size={14} color={cat.color} />
                     )}
-                  </TouchableOpacity>
-                );
-              })}
+              </TouchableOpacity>
+            );
+          })} */}
             </View>
           </View>
 
