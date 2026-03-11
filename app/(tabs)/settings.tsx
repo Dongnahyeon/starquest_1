@@ -150,7 +150,7 @@ export default function SettingsScreen() {
         contentContainerStyle={{ flexGrow: 1 }}
         style={{ flex: 1, backgroundColor: colors.background }}
       >
-        <View style={[styles.container, { paddingBottom: insets.bottom + 16 }]}>
+        <View style={[styles.container, { paddingBottom: insets.bottom + 16, backgroundColor: colors.background }]}>
           {/* 헤더 */}
           <View style={styles.header}>
             <Text style={[styles.title, { color: colors.text }]}>⚙️ 설정</Text>
