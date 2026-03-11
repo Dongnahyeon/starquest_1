@@ -145,7 +145,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScreenContainer>
+    <ScreenContainer className="flex-1" containerClassName="flex-1" style={{ backgroundColor: colors.background }}>
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         style={{ flex: 1, backgroundColor: colors.background }}

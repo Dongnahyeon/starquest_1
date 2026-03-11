@@ -1205,4 +1205,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#0A0E1A',
   },
+  modal: {
+    backgroundColor: '#1A1F26',
+    borderRadius: 16,
+    padding: 20,
+    maxHeight: '80%',
+  },
+  modalInput: {
+    backgroundColor: '#111827',
+    borderWidth: 1,
+    borderColor: '#1E2A3A',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    color: '#E2E8F0',
+    fontSize: 15,
+    marginBottom: 20,
+  },
 });
