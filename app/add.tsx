@@ -47,6 +47,10 @@ export default function AddScreen() {
     setClassifyResult(null);
 
     try {
+      if (!categories || !Array.isArray(categories)) {
+        setError('카테고리를 불러올 수 없어요.');
+        return;
+      }
       const result = await classifyMutation.mutateAsync({
         title: title.trim(),
         existingCategories: categories.map((c) => ({
@@ -59,7 +63,7 @@ export default function AddScreen() {
       setSelectedCategoryId(result.categoryId);
     } catch (e) {
       // Fallback to 'other' category if AI fails
-      const otherCat = categories.find((c) => c.id === 'other');
+      const otherCat = (categories && Array.isArray(categories)) ? categories.find((c) => c.id === 'other') : undefined;
       if (otherCat) {
         setClassifyResult({
           categoryId: 'other',
@@ -93,7 +97,7 @@ export default function AddScreen() {
     }
   };
 
-  const selectedCategory = categories.find((c) => c.id === (selectedCategoryId ?? classifyResult?.categoryId));
+  const selectedCategory = (categories && Array.isArray(categories)) ? categories.find((c) => c.id === (selectedCategoryId ?? classifyResult?.categoryId)) : undefined;
 
   return (
     <KeyboardAvoidingView
@@ -184,7 +188,7 @@ export default function AddScreen() {
           <View style={styles.categorySection}>
             <Text style={styles.sectionLabel}>카테고리 선택</Text>
             <View style={styles.categoryGrid}>
-              {categories.map((cat) => {
+              {(categories && Array.isArray(categories)) ? categories.map((cat) => {
                 const isSelected = (selectedCategoryId ?? classifyResult?.categoryId) === cat.id;
                 return (
                   <TouchableOpacity
@@ -213,7 +217,7 @@ export default function AddScreen() {
                     )}
                   </TouchableOpacity>
                 );
-              })}
+              }) : null}
             </View>
           </View>
         </ScrollView>
