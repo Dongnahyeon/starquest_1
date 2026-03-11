@@ -544,7 +544,17 @@ export default function ListDetailScreen() {
 
               <TouchableOpacity
                 style={styles.deleteItemButton}
-                onPress={() => handleDeleteItem(item.id, item.title)}
+                onPress={() => {
+                  setShowItemDetailModal(false);
+                  setShowItemNoteModal(false);
+                  setShowNoteModal(false);
+                  setTimeout(() => {
+                    setEditingItemId(item.id);
+                    setEditItemText(item.title);
+                    setSelectedItemNote(item.completionNote || '');
+                    setShowEditItemModal(true);
+                  }, 50);
+                }}
                 activeOpacity={0.7}
               >
                 <IconSymbol name="pencil" size={16} color="#718096" />
@@ -725,34 +735,78 @@ export default function ListDetailScreen() {
         </View>
       )}
 
-      {/* 항목 수정 모달 */}
+      {/* 항목 수정 모달 - 항목명과 메모 함께 수정 */}
     {showEditItemModal && (
       <View style={styles.modalOverlay}>
-        <View style={styles.modal}>
+        <ScrollView
+          style={styles.modalContent}
+          contentContainerStyle={styles.modalContentScroll}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           <Text style={styles.modalTitle}>항목 수정</Text>
+          
+          <Text style={styles.modalSubtitle}>항목명</Text>
           <TextInput
-            style={styles.modalInput}
+            style={styles.noteInput}
             placeholder="항목 이름"
             placeholderTextColor="#718096"
             value={editItemText}
             onChangeText={setEditItemText}
             maxLength={100}
           />
+          
+          <Text style={styles.modalSubtitle}>메모</Text>
+          <TextInput
+            style={styles.noteInput}
+            placeholder="메모를 입력하세요"
+            placeholderTextColor="#718096"
+            value={selectedItemNote}
+            onChangeText={setSelectedItemNote}
+            multiline
+            numberOfLines={4}
+          />
+          
           <View style={styles.modalButtonRow}>
             <TouchableOpacity
               style={styles.modalCancelButton}
-              onPress={() => setShowEditItemModal(false)}
+              onPress={() => {
+                setShowEditItemModal(false);
+                setEditingItemId(null);
+                setEditItemText('');
+                setSelectedItemNote('');
+              }}
             >
               <Text style={styles.modalCancelButtonText}>취소</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.modalSaveButton}
-              onPress={handleSaveEditItem}
+              onPress={async () => {
+                if (!editItemText.trim() || !list || !editingItemId) return;
+                try {
+                  // 항목명 수정
+                  await updateListItemTitle(list.id, editingItemId, editItemText.trim());
+                  // 메모 수정
+                  await updateListItemNote(list.id, editingItemId, selectedItemNote);
+                  
+                  setShowEditItemModal(false);
+                  setEditingItemId(null);
+                  setEditItemText('');
+                  setSelectedItemNote('');
+                  
+                  if (Platform.OS !== 'web') {
+                    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                  }
+                } catch (error) {
+                  console.error('Update failed:', error);
+                  Alert.alert('오류', '항목 수정에 실패했습니다.');
+                }
+              }}
             >
               <Text style={styles.modalSaveButtonText}>저장</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </ScrollView>
       </View>
     )}
 
