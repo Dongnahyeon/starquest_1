@@ -67,15 +67,23 @@ export function useLists() {
   const deleteList = useCallback(
     async (listId: string) => {
       console.log('[LOG] deleteList 함수 호출:', listId);
-      setLists((prev) => {
-        const deletedList = prev.find((l) => l.id === listId);
-        console.log('[LOG] 삭제할 리스트:', deletedList?.title);
-        const newLists = prev.filter((l) => l.id !== listId);
-        console.log('[LOG] 삭제 후 남은 리스트:', newLists.length, '개');
-        return newLists;
-      });
+      console.log('[LOG] 현재 리스트 개수:', lists.length);
+      
+      const deletedList = lists.find((l) => l.id === listId);
+      console.log('[LOG] 삭제할 리스트:', deletedList?.title);
+      
+      if (!deletedList) {
+        console.error('[ERROR] 삭제할 리스트를 찾을 수 없음:', listId);
+        return;
+      }
+      
+      const newLists = lists.filter((l) => l.id !== listId);
+      console.log('[LOG] 삭제 후 남은 리스트:', newLists.length, '개');
+      
+      setLists(newLists);
+      console.log('[LOG] 리스트 상태 업데이트 완료');
     },
-    []
+    [lists]
   );
 
   const addListItem = useCallback(
