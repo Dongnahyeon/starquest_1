@@ -89,11 +89,22 @@ export default function ListDetailScreen() {
     
     // 완료 상태로 변경할 때만 메모 입력 모달 표시
     if (!item.completed) {
-      setShowItemDetailModal(false); // 기존 모달 닫기
-      setShowItemNoteModal(false); // 메모 수정 모달 닫기
-      setSelectedItemId(itemId);
+      // 모든 모달을 먼저 닫기
+      setShowItemDetailModal(false);
+      setShowItemNoteModal(false);
+      setShowNoteModal(false);
+      
+      // 상태 초기화
+      setSelectedItemId(null);
       setNoteText('');
-      setShowNoteModal(true);
+      setSelectedItemNote('');
+      
+      // 새로운 모달 열기
+      setTimeout(() => {
+        setSelectedItemId(itemId);
+        setNoteText('');
+        setShowNoteModal(true);
+      }, 50);
       return;
     }
     
