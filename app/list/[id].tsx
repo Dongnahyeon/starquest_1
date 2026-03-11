@@ -533,24 +533,22 @@ export default function ListDetailScreen() {
             </View>
 
             {/* 아이콘 */}
-            {!item.completed && (
-              <View style={styles.itemIconsContainer}>
-                <TouchableOpacity
-                  style={styles.itemIcon}
-                  onPress={() => handleEditItem(item.id, item.title)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.itemIconText}>✏️</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.itemIcon}
-                  onPress={() => handleDeleteItem(item.id, item.title)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.itemIconText}>🗑️</Text>
-                </TouchableOpacity>
-              </View>
-            )}
+            <View style={styles.itemIconsContainer}>
+              <TouchableOpacity
+                style={styles.itemIcon}
+                onPress={() => handleEditItem(item.id, item.title)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.itemIconText}>✏️</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.itemIcon}
+                onPress={() => handleDeleteItem(item.id, item.title)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.itemIconText}>🗑️</Text>
+              </TouchableOpacity>
+            </View>
           </TouchableOpacity>
         )}
         ListEmptyComponent={
