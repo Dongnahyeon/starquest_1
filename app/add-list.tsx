@@ -50,7 +50,7 @@ export default function AddListScreen() {
     }
   };
 
-  const selectedCategory = categories.find((c) => c.id === selectedCategoryId);
+  // Category selection removed for lists
 
   return (
     <KeyboardAvoidingView
