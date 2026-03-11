@@ -84,34 +84,6 @@ export default function ListDetailScreen() {
   const handleToggleItem = async (itemId: string) => {
     if (!list) return;
     
-    const item = list.items.find(i => i.id === itemId);
-    if (!item) return;
-    
-    // 완료 상태로 변경할 때만 메모 입력 모달 표시
-    if (!item.completed) {
-      // 모든 모달을 먼저 닫기
-      setShowItemDetailModal(false);
-      setShowItemNoteModal(false);
-      setShowEditItemModal(false);
-      setShowNoteModal(false);
-      
-      // 상태 초기화
-      setSelectedItemId(null);
-      setNoteText('');
-      setSelectedItemNote('');
-      setEditingItemId(null);
-      setEditItemText('');
-      
-      // 새로운 모달 열기
-      setTimeout(() => {
-        setSelectedItemId(itemId);
-        setNoteText('');
-        setShowNoteModal(true);
-      }, 100);
-      return;
-    }
-    
-    // 미완료 상태로 변경
     if (Platform.OS !== 'web') {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
@@ -124,45 +96,7 @@ export default function ListDetailScreen() {
     }
   };
   
-  const handleSaveNote = async () => {
-    if (!list || !selectedItemId) return;
-    
-    // 모든 모달을 먼저 닫기
-    setShowNoteModal(false);
-    setShowItemNoteModal(false);
-    setShowItemDetailModal(false);
-    
-    if (Platform.OS !== 'web') {
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
 
-    Animated.sequence([
-      Animated.spring(starScale, {
-        toValue: 1.3,
-        friction: 3,
-        tension: 120,
-        useNativeDriver: true,
-      }),
-      Animated.spring(starScale, {
-        toValue: 1,
-        friction: 5,
-        tension: 80,
-        useNativeDriver: true,
-      }),
-    ]).start();
-    
-    // 메모를 저장하고 항목 완료
-    const itemIdToToggle = selectedItemId;
-    const noteToSave = noteText;
-    
-    // 상태 초기화
-    setSelectedItemId(null);
-    setNoteText('');
-    setSelectedItemNote('');
-    
-    // 항목 완료 처리
-    await toggleListItem(list.id, itemIdToToggle, noteToSave);
-  };
 
   const handleViewNote = (itemId: string, itemTitle: string, note: string) => {
     setShowNoteModal(false); // 완료 메모 모달 먼저 닫기
@@ -562,50 +496,7 @@ export default function ListDetailScreen() {
         }
       />
       
-      {/* Note Modal - 완료 메모 입력 */}
-      {showNoteModal && (
-        <View style={styles.modalOverlay}>
-          <ScrollView
-            style={styles.modalContent}
-            contentContainerStyle={styles.modalContentScroll}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            <Text style={styles.modalTitle}>완료 메모</Text>
-            <Text style={styles.modalSubtitle}>이 항목을 완료한 후 메모를 남겨보세요</Text>
-            
-            <TextInput
-              style={styles.noteInput}
-              placeholder="메모를 입력하세요 (선택사항)"
-              placeholderTextColor="#718096"
-              value={noteText}
-              onChangeText={setNoteText}
-              multiline
-              numberOfLines={4}
-            />
-            
-            <View style={styles.modalButtonRow}>
-              <TouchableOpacity
-                style={styles.modalCancelButton}
-                onPress={() => {
-                  setShowNoteModal(false);
-                  setSelectedItemId(null);
-                  setNoteText('');
-                }}
-              >
-                <Text style={styles.modalCancelButtonText}>취소</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={styles.modalSaveButton}
-                onPress={handleSaveNote}
-              >
-                <Text style={styles.modalSaveButtonText}>완료</Text>
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
-        </View>
-      )}
+
 
       {/* Note View Modal - 메모 보기 */}
       {showItemNoteModal && (
@@ -811,37 +702,7 @@ export default function ListDetailScreen() {
       </View>
     )}
 
-    {/* 메모 수정 모달 */}
-    {showNoteModal && (
-      <View style={styles.modalOverlay}>
-        <View style={styles.modal}>
-          <Text style={styles.modalTitle}>메모 수정</Text>
-          <TextInput
-            style={[styles.modalInput, { height: 120, textAlignVertical: 'top' }]}
-            placeholder="메모를 입력하세요"
-            placeholderTextColor="#718096"
-            value={noteText}
-            onChangeText={setNoteText}
-            multiline
-            maxLength={500}
-          />
-          <View style={styles.modalButtonRow}>
-            <TouchableOpacity
-              style={styles.modalCancelButton}
-              onPress={() => setShowNoteModal(false)}
-            >
-              <Text style={styles.modalCancelButtonText}>취소</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.modalSaveButton}
-              onPress={handleSaveNote}
-            >
-              <Text style={styles.modalSaveButtonText}>저장</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    )}
+
 
     {/* 삭제 확인 모달 */}
     {showDeleteModal && (
