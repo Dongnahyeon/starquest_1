@@ -195,10 +195,9 @@ export default function ListScreen() {
         </View>
         <View style={styles.achievementContent}>
           <Text style={styles.achievementTitle} numberOfLines={1}>
-            {getStarDynamicName(item.completionCount)}
+            {item.title}
           </Text>
           <Text style={styles.achievementCategory}>{category?.emoji} {category?.name}</Text>
-          <Text style={styles.achievementSubtitle}>{item.title}</Text>
         </View>
         <View style={styles.achievementRight}>
           <Text style={styles.achievementCount}>{item.completionCount}회</Text>

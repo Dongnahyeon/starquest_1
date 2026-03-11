@@ -161,9 +161,6 @@ export default function DetailScreen() {
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <IconSymbol name="arrow.left" size={24} color="#E2E8F0" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-            <IconSymbol name="trash.fill" size={20} color="#FC8181" />
-          </TouchableOpacity>
         </View>
 
         {/* Category badge */}
