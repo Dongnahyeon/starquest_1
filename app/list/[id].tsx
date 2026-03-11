@@ -39,6 +39,7 @@ export default function ListDetailScreen() {
   const [noteText, setNoteText] = useState('');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [showItemNoteModal, setShowItemNoteModal] = useState(false);
+  const [showItemDetailModal, setShowItemDetailModal] = useState(false);
   const [selectedItemNote, setSelectedItemNote] = useState('');
   const [selectedItemTitle, setSelectedItemTitle] = useState('');
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
@@ -157,6 +158,14 @@ export default function ListDetailScreen() {
       setSelectedItemNote(note);
       setShowItemNoteModal(true);
     }, 100); // 상태 업데이트 후 새 모달 열기
+  };
+
+  const handleViewItemDetail = (itemId: string, itemTitle: string, note: string) => {
+    setShowItemNoteModal(false); // 기존 모달 닫기
+    setSelectedItemId(itemId);
+    setSelectedItemTitle(itemTitle);
+    setSelectedItemNote(note);
+    setShowItemDetailModal(true);
   };
 
   const handleEditNote = async () => {
@@ -492,7 +501,11 @@ export default function ListDetailScreen() {
               </View>
             </TouchableOpacity>
 
-            <View style={styles.itemContent}>
+            <TouchableOpacity
+              style={styles.itemContent}
+              onPress={() => handleViewItemDetail(item.id, item.title, item.completionNote || '')}
+              activeOpacity={0.7}
+            >
               <Text style={styles.itemTitle}>
                 {item.title}
               </Text>
@@ -505,7 +518,7 @@ export default function ListDetailScreen() {
                   메모: {item.completionNote}
                 </Text>
               )}
-            </View>
+            </TouchableOpacity>
 
             <View style={styles.itemActions}>
               {item.completionNote && (
@@ -520,7 +533,7 @@ export default function ListDetailScreen() {
 
               <TouchableOpacity
                 style={styles.deleteItemButton}
-                onPress={() => handleEditItem(item.id, item.title)}
+                onPress={() => handleDeleteItem(item.id)}
                 activeOpacity={0.7}
               >
                 <IconSymbol name="pencil" size={16} color="#718096" />
