@@ -534,33 +534,7 @@ export default function ListDetailScreen() {
               )}
             </TouchableOpacity>
 
-            <View style={styles.itemActions}>
-              <TouchableOpacity
-                style={styles.deleteItemButton}
-                onPress={() => {
-                  setShowItemDetailModal(false);
-                  setShowItemNoteModal(false);
-                  setShowNoteModal(false);
-                  setTimeout(() => {
-                    setEditingItemId(item.id);
-                    setEditItemText(item.title);
-                    setSelectedItemNote(item.completionNote || '');
-                    setShowEditItemModal(true);
-                  }, 50);
-                }}
-                activeOpacity={0.7}
-              >
-                <IconSymbol name="pencil" size={16} color="#718096" />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.deleteItemButton}
-                onPress={() => handleDeleteItem(item.id, item.title)}
-                activeOpacity={0.7}
-              >
-                <IconSymbol name="xmark" size={16} color="#FC8181" />
-              </TouchableOpacity>
-            </View>
+            {/* 아이콘 제거됨 */}
           </TouchableOpacity>
         )}
         ListEmptyComponent={
