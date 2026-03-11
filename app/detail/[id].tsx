@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useAchievementsContext } from '@/lib/achievements-context';
-import { getStarBrightness, getStarColor, getStarGlowIntensity } from '@/types/achievement';
+import { getStarBrightness, getStarColor, getStarGlowIntensity, getStarDynamicName } from '@/types/achievement';
 
 const BRIGHTNESS_LABELS: Record<string, string> = {
   dim: '미완성 별',
@@ -225,10 +225,10 @@ export default function DetailScreen() {
         {/* Title */}
         <Text style={styles.title}>{achievement.title}</Text>
 
-        {/* Brightness status */}
+        {/* Star Evolution Stage */}
         <View style={[styles.statusBadge, { backgroundColor: `${starColor}20`, borderColor: `${starColor}40` }]}>
           <Text style={[styles.statusText, { color: starColor }]}>
-            {BRIGHTNESS_LABELS[brightness]}
+            {getStarDynamicName(achievement.completionCount)}
           </Text>
         </View>
 
@@ -391,24 +391,25 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: 32,
+    fontWeight: '800',
     color: '#E2E8F0',
     textAlign: 'center',
-    marginBottom: 12,
-    lineHeight: 32,
+    marginBottom: 16,
+    lineHeight: 40,
+    letterSpacing: 0.5,
   },
   statusBadge: {
     alignSelf: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 16,
     borderWidth: 1,
     marginBottom: 28,
   },
   statusText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
   },
   statsRow: {
     flexDirection: 'row',
