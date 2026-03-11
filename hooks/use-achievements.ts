@@ -175,6 +175,8 @@ export function useAchievements() {
   return {
     data,
     loading,
+    achievements: data.achievements,
+    categories: data.categories,
     addAchievement,
     completeAchievement,
     uncompleteAchievement,
