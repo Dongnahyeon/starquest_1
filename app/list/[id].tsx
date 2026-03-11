@@ -359,10 +359,10 @@ export default function ListDetailScreen() {
               </TouchableOpacity>
               <View style={{ flexDirection: "row", gap: 8 }}>
                 <TouchableOpacity style={styles.deleteButton} onPress={handleEditListTitle}>
-                  <IconSymbol name="pencil" size={20} color="#A0AEC0" />
+                  <Text style={{ fontSize: 20 }}>✏️</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteList}>
-                  <IconSymbol name="trash.fill" size={20} color="#FC8181" />
+                  <Text style={{ fontSize: 20 }}>🗑️</Text>
                 </TouchableOpacity>
               </View>
             </View>
