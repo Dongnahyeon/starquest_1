@@ -139,7 +139,7 @@ export default function DetailScreen() {
   return (
     <View style={styles.root}>
       {/* Background */}
-      <View style={styles.background}>
+      <View style={styles.background} pointerEvents="none">
         <Animated.View
           style={[
             styles.bgGlow,
