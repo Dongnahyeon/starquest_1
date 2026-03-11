@@ -222,12 +222,6 @@ export default function ListScreen() {
             <IconSymbol name="pencil" size={16} color="#718096" />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => handleDelete(item)}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <IconSymbol name="trash" size={16} color="#FC8181" />
-          </TouchableOpacity>
-          <TouchableOpacity
             onPress={() => handleComplete(item)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
