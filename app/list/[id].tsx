@@ -146,6 +146,7 @@ export default function ListDetailScreen() {
   };
 
   const handleViewNote = (itemId: string, itemTitle: string, note: string) => {
+    setShowNoteModal(false); // 완료 메모 모달 먼저 닫기
     setSelectedItemId(itemId);
     setSelectedItemTitle(itemTitle);
     setSelectedItemNote(note);
