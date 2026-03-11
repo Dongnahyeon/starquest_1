@@ -119,7 +119,7 @@ export default function AddScreen() {
           </TouchableOpacity>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scrollViewContent}>
           {/* Input */}
           <View style={styles.inputSection}>
             <Text style={styles.inputLabel}>성취 목표</Text>
@@ -456,5 +456,9 @@ const styles = StyleSheet.create({
   saveButtonStar: {
     fontSize: 18,
     color: '#0A0E1A',
+  },
+  scrollViewContent: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
 });

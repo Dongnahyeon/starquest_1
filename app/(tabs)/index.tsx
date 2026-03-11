@@ -25,8 +25,8 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { data, totalCompletions, totalAchievements } = useAchievementsContext();
-  const achievements = data.achievements;
-  const categories = data.categories;
+  const achievements = (data && data.achievements && Array.isArray(data.achievements)) ? data.achievements : [];
+  const categories = (data && data.categories && Array.isArray(data.categories)) ? data.categories : [];
   const { lists } = useListsContext();
   const [showIntro, setShowIntro] = useState(true);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -40,12 +40,12 @@ export default function HomeScreen() {
   }, []);
 
   // Get categories that have achievements
-  const activeCategories = categories.filter((cat) =>
+  const activeCategories = (categories && Array.isArray(categories)) ? categories.filter((cat) =>
     achievements.some((a) => a.categoryId === cat.id)
-  );
+  ) : [];
 
   // Include all categories for display
-  const displayCategories = categories;
+  const displayCategories = (categories && Array.isArray(categories)) ? categories : [];
 
   const currentCategoryId = selectedCategoryId ?? (displayCategories[0]?.id ?? null);
   const currentCategory = displayCategories.find((c) => c.id === currentCategoryId) ?? displayCategories[0];
