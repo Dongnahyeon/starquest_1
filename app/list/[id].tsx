@@ -535,16 +535,6 @@ export default function ListDetailScreen() {
             </TouchableOpacity>
 
             <View style={styles.itemActions}>
-              {item.completionNote && (
-                <TouchableOpacity
-                  style={styles.noteButton}
-                  onPress={() => handleViewNote(item.id, item.title, item.completionNote || '')}
-                  activeOpacity={0.7}
-                >
-                  <IconSymbol name="note.text" size={16} color="#A0AEC0" />
-                </TouchableOpacity>
-              )}
-
               <TouchableOpacity
                 style={styles.deleteItemButton}
                 onPress={() => {
