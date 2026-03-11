@@ -141,16 +141,21 @@ export default function ListDetailScreen() {
     
     await toggleListItem(list.id, selectedItemId, noteText);
     setShowNoteModal(false);
+    setShowItemNoteModal(false); // 메모 수정 모달도 함께 닫기
     setSelectedItemId(null);
     setNoteText('');
+    setSelectedItemNote('');
   };
 
   const handleViewNote = (itemId: string, itemTitle: string, note: string) => {
     setShowNoteModal(false); // 완료 메모 모달 먼저 닫기
-    setSelectedItemId(itemId);
-    setSelectedItemTitle(itemTitle);
-    setSelectedItemNote(note);
-    setShowItemNoteModal(true);
+    setShowItemNoteModal(false); // 기존 메모 수정 모달 닫기
+    setTimeout(() => {
+      setSelectedItemId(itemId);
+      setSelectedItemTitle(itemTitle);
+      setSelectedItemNote(note);
+      setShowItemNoteModal(true);
+    }, 100); // 상태 업데이트 후 새 모달 열기
   };
 
   const handleEditNote = async () => {
