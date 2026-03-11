@@ -18,7 +18,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { StarIcon } from '@/components/StarIcon';
 import { useAchievementsContext } from '@/lib/achievements-context';
 import { useListsContext } from '@/lib/lists-context';
-import { Achievement, Category } from '@/types/achievement';
+import { Achievement, Category, getStarDynamicName } from '@/types/achievement';
 import { ScreenContainer } from '@/components/screen-container';
 
 export default function ListScreen() {
@@ -195,9 +195,10 @@ export default function ListScreen() {
         </View>
         <View style={styles.achievementContent}>
           <Text style={styles.achievementTitle} numberOfLines={1}>
-            {item.title}
+            {getStarDynamicName(item.completionCount)}
           </Text>
           <Text style={styles.achievementCategory}>{category?.emoji} {category?.name}</Text>
+          <Text style={styles.achievementSubtitle}>{item.title}</Text>
         </View>
         <View style={styles.achievementRight}>
           <Text style={styles.achievementCount}>{item.completionCount}회</Text>
@@ -570,6 +571,11 @@ const styles = StyleSheet.create({
   achievementCategory: {
     fontSize: 11,
     color: '#718096',
+  },
+  achievementSubtitle: {
+    fontSize: 10,
+    color: '#94A3B8',
+    marginTop: 2,
   },
   achievementRight: {
     flexDirection: 'row',
