@@ -574,7 +574,12 @@ export default function ListDetailScreen() {
       {/* Note Modal - 완료 메모 입력 */}
       {showNoteModal && (
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <ScrollView
+            style={styles.modalContent}
+            contentContainerStyle={styles.modalContentScroll}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
             <Text style={styles.modalTitle}>완료 메모</Text>
             <Text style={styles.modalSubtitle}>이 항목을 완료한 후 메모를 남겨보세요</Text>
             
@@ -607,7 +612,7 @@ export default function ListDetailScreen() {
                 <Text style={styles.modalSaveButtonText}>완료</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </ScrollView>
         </View>
       )}
 
@@ -1136,6 +1141,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     paddingHorizontal: 20,
     paddingTop: 24,
+    maxHeight: '80%',
+  },
+  modalContentScroll: {
     paddingBottom: 32,
   },
   modalTitle: {
