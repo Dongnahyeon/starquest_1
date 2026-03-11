@@ -89,7 +89,8 @@ export default function ListDetailScreen() {
     
     // 완료 상태로 변경할 때만 메모 입력 모달 표시
     if (!item.completed) {
-      setShowItemNoteModal(false); // 기존 메모 수정 모달 닫기
+      setShowItemDetailModal(false); // 기존 모달 닫기
+      setShowItemNoteModal(false); // 메모 수정 모달 닫기
       setSelectedItemId(itemId);
       setNoteText('');
       setShowNoteModal(true);
@@ -100,23 +101,13 @@ export default function ListDetailScreen() {
     if (Platform.OS !== 'web') {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
-
-    Animated.sequence([
-      Animated.spring(starScale, {
-        toValue: 1.3,
-        friction: 3,
-        tension: 120,
-        useNativeDriver: true,
-      }),
-      Animated.spring(starScale, {
-        toValue: 1,
-        friction: 5,
-        tension: 80,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    await toggleListItem(list.id, itemId);
+    
+    try {
+      await toggleListItem(list.id, itemId);
+    } catch (error) {
+      console.error('Toggle error:', error);
+      Alert.alert('오류', '항목 완료 상태 변경에 실패했습니다.');
+    }
   };
   
   const handleSaveNote = async () => {
@@ -533,7 +524,7 @@ export default function ListDetailScreen() {
 
               <TouchableOpacity
                 style={styles.deleteItemButton}
-                onPress={() => handleDeleteItem(item.id)}
+                onPress={() => handleViewItemDetail(item.id, item.title, item.completionNote || '')}
                 activeOpacity={0.7}
               >
                 <IconSymbol name="pencil" size={16} color="#718096" />
@@ -639,6 +630,68 @@ export default function ListDetailScreen() {
               <TouchableOpacity
                 style={styles.modalSaveButton}
                 onPress={handleEditNote}
+              >
+                <Text style={styles.modalSaveButtonText}>저장</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+
+      
+
+      {/* Item Detail Modal - 항목 상세 */}
+      {showItemDetailModal && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{selectedItemTitle}</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowItemDetailModal(false);
+                  setSelectedItemNote('');
+                }}
+              >
+                <Text style={styles.modalCloseButton}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <Text style={styles.modalSubtitle}>메모</Text>
+            
+            <TextInput
+              style={styles.noteInput}
+              placeholder="메모를 입력하세요"
+              placeholderTextColor="#718096"
+              value={selectedItemNote}
+              onChangeText={setSelectedItemNote}
+              multiline
+              numberOfLines={4}
+            />
+            
+            <View style={styles.modalButtonRow}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setShowItemDetailModal(false)}
+              >
+                <Text style={styles.modalCancelButtonText}>닫기</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.modalSaveButton}
+                onPress={async () => {
+                  if (list && selectedItemId) {
+                    try {
+                      await updateListItemNote(list.id, selectedItemId, selectedItemNote);
+                      setShowItemDetailModal(false);
+                      setSelectedItemNote('');
+                      if (Platform.OS !== 'web') {
+                        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                      }
+                    } catch (error) {
+                      Alert.alert('오류', '메모 수정에 실패했습니다.');
+                    }
+                  }
+                }}
               >
                 <Text style={styles.modalSaveButtonText}>저장</Text>
               </TouchableOpacity>
