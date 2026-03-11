@@ -128,9 +128,9 @@ export default function SettingsScreen() {
     );
   };
 
-  const totalAchievements = achievements.length;
-  const completedAchievements = achievements.filter(a => a.completionCount > 0).length;
-  const totalLists = lists.length;
+  const totalAchievements = (achievements && Array.isArray(achievements)) ? achievements.length : 0;
+  const completedAchievements = (achievements && Array.isArray(achievements)) ? achievements.filter(a => a.completionCount > 0).length : 0;
+  const totalLists = (lists && Array.isArray(lists)) ? lists.length : 0;
 
   const isDark = isDarkMode;
   const colors = {
