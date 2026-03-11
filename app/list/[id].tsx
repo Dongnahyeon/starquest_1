@@ -471,7 +471,20 @@ export default function ListDetailScreen() {
               )}
             </View>
 
-
+            <View style={styles.itemActions}>
+              <TouchableOpacity
+                onPress={() => handleEditItem(item.id, item.title)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <IconSymbol name="pencil" size={16} color="#4ECDC4" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleDeleteItem(item.id, item.title)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <IconSymbol name="trash" size={16} color="#FC8181" />
+              </TouchableOpacity>
+            </View>
           </TouchableOpacity>
         )}
         ListEmptyComponent={
