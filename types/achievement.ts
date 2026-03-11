@@ -35,16 +35,16 @@ export function getStarBrightness(completionCount: number): StarBrightness {
 // 0: 회색, 1: 주황색, 4: 붉은색, 16: 청색, 64: 백색, 256: 노랑, 1024: 보라, 4096+: 샛노랑
 // 부드럽고 눈에 편한 색상으로 조정
 export function getStarColor(completionCount: number): string {
-  // 9단계 진화 시스템
+  // 9단계 진화 시스템 (4배씩 증가: 0, 1, 4, 16, 64, 256, 1024, 4096, 16384+)
   if (completionCount === 0) return '#6B7280'; // 1. 희미한 점 (어두운 회색)
   if (completionCount === 1) return '#D1D5DB'; // 2. 가느다란 반짝임 (밝은 회색)
-  if (completionCount === 2) return '#93C5FD'; // 3. 작은 빛의 맥박 (밝은 파란색)
-  if (completionCount === 3) return '#3B82F6'; // 4. 은은한 별빛 (파란색)
-  if (completionCount === 4) return '#FCD34D'; // 5. 또렷해지는 광채 (밝은 노란색)
-  if (completionCount === 5) return '#FBBF24'; // 6. 부드럽게 퍼지는 빛 (노란색)
-  if (completionCount === 6) return '#FB923C'; // 7. 선명하게 타오르는 별빛 (주황색)
-  if (completionCount === 7) return '#EF4444'; // 8. 눈부시게 빛나는 순간 (밝은 빨간색)
-  return '#FCD34D'; // 9. 찬란하게 빛나는 별 (밝은 황금색)
+  if (completionCount < 16) return '#93C5FD'; // 3. 작은 빛의 맥박 (밝은 파란색) - 4~15회
+  if (completionCount < 64) return '#3B82F6'; // 4. 은은한 별빛 (파란색) - 16~63회
+  if (completionCount < 256) return '#FCD34D'; // 5. 또렷해지는 광채 (밝은 노란색) - 64~255회
+  if (completionCount < 1024) return '#FBBF24'; // 6. 부드럽게 퍼지는 빛 (노란색) - 256~1023회
+  if (completionCount < 4096) return '#FB923C'; // 7. 선명하게 타오르는 별빛 (주황색) - 1024~4095회
+  if (completionCount < 16384) return '#EF4444'; // 8. 눈부시게 빛나는 순간 (밝은 빨간색) - 4096~16383회
+  return '#FCD34D'; // 9. 찬란하게 빛나는 별 (밝은 황금색) - 16384회 이상
 }
 
 export function getStarGlowIntensity(completionCount: number): number {
@@ -68,20 +68,15 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'other', name: '기타', emoji: '⭐', color: '#A0AEC0', createdAt: new Date().toISOString() },
 ];
 
-// 별 색상에 따른 동적 이름 반환 - 9단계 진화 시스템
+// 별 색상에 따른 동적 이름 반환 - 9단계 진화 시스템 (4배씩 증가)
 export function getStarDynamicName(completionCount: number): string {
-  const names = [
-    '희미한 점',           // 0
-    '가느다란 반짝임',     // 1
-    '작은 빛의 맥박',      // 2
-    '은은한 별빛',         // 3
-    '또렷해지는 광채',     // 4
-    '부드럽게 퍼지는 빛',  // 5
-    '선명하게 타오르는 별빛', // 6
-    '눈부시게 빛나는 순간', // 7
-    '찬란하게 빛나는 별',  // 8+
-  ];
-  
-  if (completionCount >= 8) return names[8];
-  return names[completionCount];
+  if (completionCount === 0) return '희미한 점';
+  if (completionCount === 1) return '가느다란 반짝임';
+  if (completionCount < 16) return '작은 빛의 맥박';
+  if (completionCount < 64) return '은은한 별빛';
+  if (completionCount < 256) return '또렷해지는 광채';
+  if (completionCount < 1024) return '부드럽게 퍼지는 빛';
+  if (completionCount < 4096) return '선명하게 타오르는 별빛';
+  if (completionCount < 16384) return '눈부시게 빛나는 순간';
+  return '찬란하게 빛나는 별';
 }
