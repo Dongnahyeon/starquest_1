@@ -42,12 +42,14 @@ export default function ListScreen() {
       : achievements.filter((a) => a.categoryId === selectedCategoryId);
 
   // Group by category
-  const grouped = categories
-    .map((cat) => ({
-      category: cat,
-      items: filteredAchievements.filter((a) => a.categoryId === cat.id),
-    }))
-    .filter((g) => g.items.length > 0);
+  const grouped = (categories && Array.isArray(categories))
+    ? categories
+        .map((cat) => ({
+          category: cat,
+          items: filteredAchievements.filter((a) => a.categoryId === cat.id),
+        }))
+        .filter((g) => g.items.length > 0)
+    : [];
 
   const handleComplete = async (achievement: Achievement) => {
     if (Platform.OS !== 'web') {
@@ -349,7 +351,7 @@ export default function ListScreen() {
                     전체
                   </Text>
                 </TouchableOpacity>
-                {categories.map((cat) => (
+                {(categories && Array.isArray(categories)) && categories.map((cat) => (
                   <TouchableOpacity
                     key={cat.id}
                     style={[styles.categoryBadge, selectedCategoryId === cat.id && styles.categoryBadgeActive]}
