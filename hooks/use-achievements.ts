@@ -102,15 +102,11 @@ export function useAchievements() {
       setData((prev) => ({
         ...prev,
         achievements: prev.achievements.map((a) =>
-          a.id === id && a.completionCount > 0
+          a.id === id
             ? {
                 ...a,
-                completionCount: a.completionCount - 1,
+                completionCount: Math.max(0, a.completionCount - 1),
                 completionHistory: a.completionHistory.slice(0, -1),
-                lastCompletedAt:
-                  a.completionHistory.length > 1
-                    ? a.completionHistory[a.completionHistory.length - 2]
-                    : undefined,
               }
             : a
         ),
@@ -127,6 +123,7 @@ export function useAchievements() {
         console.log('[LOG] 삭제할 별:', deletedTitle);
         const newAchievements = prev.achievements.filter((a) => a.id !== id);
         console.log('[LOG] 삭제 후 남은 별:', newAchievements.length, '개');
+        console.log('[LOG] 삭제 완료');
         return {
           ...prev,
           achievements: newAchievements,
@@ -143,7 +140,6 @@ export function useAchievements() {
         name,
         emoji,
         color,
-        createdAt: new Date().toISOString(),
       };
       setData((prev) => ({
         ...prev,
@@ -154,73 +150,38 @@ export function useAchievements() {
     []
   );
 
-  const getAchievementsByCategory = useCallback(
-    (categoryId: string) => {
-      return data.achievements.filter((a) => a.categoryId === categoryId);
+  const getAchievementById = useCallback(
+    (id: string | string[]) => {
+      const idStr = Array.isArray(id) ? id[0] : id;
+      return data.achievements.find((a) => a.id === idStr);
     },
     [data.achievements]
   );
 
   const getCategoryById = useCallback(
-    (categoryId: string) => {
-      return data.categories.find((c) => c.id === categoryId);
+    (id: string) => {
+      return data.categories.find((c) => c.id === id);
     },
     [data.categories]
   );
 
-  const getAchievementById = useCallback(
-    (id: string) => {
-      return data.achievements.find((a) => a.id === id);
+  const getCategoryByName = useCallback(
+    (name: string) => {
+      return data.categories.find((c) => c.name === name);
     },
-    [data.achievements]
+    [data.categories]
   );
-
-  const updateAchievementTitle = useCallback(
-    async (id: string, newTitle: string) => {
-      setData((prev) => ({
-        ...prev,
-        achievements: prev.achievements.map((a) =>
-          a.id === id ? { ...a, title: newTitle } : a
-        ),
-      }));
-    },
-    []
-  );
-
-  const reorderAchievements = useCallback(
-    async (fromIndex: number, toIndex: number) => {
-      setData((prev) => {
-        const newAchievements = [...prev.achievements];
-        const [movedItem] = newAchievements.splice(fromIndex, 1);
-        newAchievements.splice(toIndex, 0, movedItem);
-        return {
-          ...prev,
-          achievements: newAchievements,
-        };
-      });
-    },
-    []
-  );
-
-  const totalCompletions = data.achievements.reduce((sum, a) => sum + a.completionCount, 0);
-  const totalAchievements = data.achievements.length;
 
   return {
-    achievements: data.achievements,
-    categories: data.categories,
+    data,
     loading,
     addAchievement,
     completeAchievement,
     uncompleteAchievement,
     deleteAchievement,
-    updateAchievementTitle,
     addCategory,
-    getAchievementsByCategory,
-    getCategoryById,
     getAchievementById,
-    reorderAchievements,
-    totalCompletions,
-    totalAchievements,
-    reload: loadData,
+    getCategoryById,
+    getCategoryByName,
   };
 }

@@ -24,7 +24,9 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { achievements, categories, totalCompletions, totalAchievements } = useAchievementsContext();
+  const { data, totalCompletions, totalAchievements } = useAchievementsContext();
+  const achievements = data.achievements;
+  const categories = data.categories;
   const { lists } = useListsContext();
   const [showIntro, setShowIntro] = useState(true);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
