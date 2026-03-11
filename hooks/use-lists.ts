@@ -136,13 +136,19 @@ export function useLists() {
   );
 
   const toggleListItem = useCallback(
-    async (listId: string, itemId: string) => {
+    async (listId: string, itemId: string, note?: string) => {
       setLists((prev) =>
         prev.map((list) => {
           if (list.id === listId) {
             const updatedItems = list.items.map((item) => {
               if (item.id === itemId) {
-                return { ...item, completed: !item.completed };
+                const isCompleting = !item.completed;
+                return {
+                  ...item,
+                  completed: isCompleting,
+                  completedAt: isCompleting ? new Date().toISOString() : undefined,
+                  completionNote: isCompleting && note ? note : item.completionNote,
+                };
               }
               return item;
             });
