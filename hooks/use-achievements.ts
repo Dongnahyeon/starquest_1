@@ -36,13 +36,11 @@ export function useAchievements() {
     }
   }, []);
 
-  const saveData = useCallback(async (newData: AppData) => {
+  const saveToStorage = useCallback(async (newData: AppData) => {
     try {
-      console.log('[LOG] saveData 시작:', newData.achievements.length, '개 별');
+      console.log('[LOG] AsyncStorage에 저장 시작:', newData.achievements.length, '개 별');
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
       console.log('[LOG] AsyncStorage 저장 완료');
-      setData(newData);
-      console.log('[LOG] setData 완료, 상태 업데이트됨');
     } catch (e) {
       console.error('Failed to save data:', e);
       throw e;
@@ -52,6 +50,13 @@ export function useAchievements() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // 상태 변경 후 저장하는 헬퍼 함수
+  useEffect(() => {
+    if (!loading) {
+      saveToStorage(data).catch((e) => console.error('Auto-save failed:', e));
+    }
+  }, [data, loading, saveToStorage]);
 
   const addAchievement = useCallback(
     async (title: string, categoryId: string) => {
@@ -63,83 +68,72 @@ export function useAchievements() {
         createdAt: new Date().toISOString(),
         completionHistory: [],
       };
-      setData((prev) => {
-        const newData = {
-          ...prev,
-          achievements: [...prev.achievements, newAchievement],
-        };
-        saveData(newData).catch((e) => console.error('Failed to save:', e));
-        return newData;
-      });
+      setData((prev) => ({
+        ...prev,
+        achievements: [...prev.achievements, newAchievement],
+      }));
       return newAchievement;
     },
-    [saveData]
+    []
   );
 
   const completeAchievement = useCallback(
     async (id: string) => {
       const now = new Date().toISOString();
-      setData((prev) => {
-        const newData = {
-          ...prev,
-          achievements: prev.achievements.map((a) =>
-            a.id === id
-              ? {
-                  ...a,
-                  completionCount: a.completionCount + 1,
-                  lastCompletedAt: now,
-                  completionHistory: [...a.completionHistory, now],
-                }
-              : a
-          ),
-        };
-        saveData(newData).catch((e) => console.error('Failed to save:', e));
-        return newData;
-      });
+      setData((prev) => ({
+        ...prev,
+        achievements: prev.achievements.map((a) =>
+          a.id === id
+            ? {
+                ...a,
+                completionCount: a.completionCount + 1,
+                lastCompletedAt: now,
+                completionHistory: [...a.completionHistory, now],
+              }
+            : a
+        ),
+      }));
     },
-    [saveData]
+    []
   );
 
   const uncompleteAchievement = useCallback(
     async (id: string) => {
-      setData((prev) => {
-        const newData = {
-          ...prev,
-          achievements: prev.achievements.map((a) =>
-            a.id === id && a.completionCount > 0
-              ? {
-                  ...a,
-                  completionCount: a.completionCount - 1,
-                  completionHistory: a.completionHistory.slice(0, -1),
-                  lastCompletedAt:
-                    a.completionHistory.length > 1
-                      ? a.completionHistory[a.completionHistory.length - 2]
-                      : undefined,
-                }
-              : a
-          ),
-        };
-        saveData(newData).catch((e) => console.error('Failed to save:', e));
-        return newData;
-      });
+      setData((prev) => ({
+        ...prev,
+        achievements: prev.achievements.map((a) =>
+          a.id === id && a.completionCount > 0
+            ? {
+                ...a,
+                completionCount: a.completionCount - 1,
+                completionHistory: a.completionHistory.slice(0, -1),
+                lastCompletedAt:
+                  a.completionHistory.length > 1
+                    ? a.completionHistory[a.completionHistory.length - 2]
+                    : undefined,
+              }
+            : a
+        ),
+      }));
     },
-    [saveData]
+    []
   );
 
   const deleteAchievement = useCallback(
     async (id: string) => {
+      console.log('[LOG] deleteAchievement 함수 호출:', id);
       setData((prev) => {
         const deletedTitle = prev.achievements.find((a) => a.id === id)?.title || 'Unknown';
-        const newData = {
+        console.log('[LOG] 삭제할 별:', deletedTitle);
+        const newAchievements = prev.achievements.filter((a) => a.id !== id);
+        console.log('[LOG] 삭제 후 남은 별:', newAchievements.length, '개');
+        return {
           ...prev,
-          achievements: prev.achievements.filter((a) => a.id !== id),
+          achievements: newAchievements,
         };
-        saveData(newData).catch((e) => console.error('Failed to save:', e));
-        console.log('[LOG] 별 삭제 완료:', deletedTitle, '남은 별:', newData.achievements.length);
-        return newData;
       });
     },
-    [saveData]
+    []
   );
 
   const addCategory = useCallback(
@@ -151,17 +145,13 @@ export function useAchievements() {
         color,
         createdAt: new Date().toISOString(),
       };
-      setData((prev) => {
-        const newData = {
-          ...prev,
-          categories: [...prev.categories, newCategory],
-        };
-        saveData(newData).catch((e) => console.error('Failed to save:', e));
-        return newData;
-      });
+      setData((prev) => ({
+        ...prev,
+        categories: [...prev.categories, newCategory],
+      }));
       return newCategory;
     },
-    [saveData]
+    []
   );
 
   const getAchievementsByCategory = useCallback(
@@ -187,18 +177,14 @@ export function useAchievements() {
 
   const updateAchievementTitle = useCallback(
     async (id: string, newTitle: string) => {
-      setData((prev) => {
-        const newData = {
-          ...prev,
-          achievements: prev.achievements.map((a) =>
-            a.id === id ? { ...a, title: newTitle } : a
-          ),
-        };
-        saveData(newData).catch((e) => console.error('Failed to save:', e));
-        return newData;
-      });
+      setData((prev) => ({
+        ...prev,
+        achievements: prev.achievements.map((a) =>
+          a.id === id ? { ...a, title: newTitle } : a
+        ),
+      }));
     },
-    [saveData]
+    []
   );
 
   const reorderAchievements = useCallback(
@@ -207,15 +193,13 @@ export function useAchievements() {
         const newAchievements = [...prev.achievements];
         const [movedItem] = newAchievements.splice(fromIndex, 1);
         newAchievements.splice(toIndex, 0, movedItem);
-        const newData = {
+        return {
           ...prev,
           achievements: newAchievements,
         };
-        saveData(newData).catch((e) => console.error('Failed to save:', e));
-        return newData;
       });
     },
-    [saveData]
+    []
   );
 
   const totalCompletions = data.achievements.reduce((sum, a) => sum + a.completionCount, 0);

@@ -1,49 +1,56 @@
-import { useCallback, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useCallback, useEffect, useState } from 'react';
 import { List, ListItem } from '@/types/list';
 
-const LISTS_STORAGE_KEY = 'starquest_lists';
+const STORAGE_KEY = 'starquest_lists';
 
 export function useLists() {
   const [lists, setLists] = useState<List[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  // 리스트 불러오기
   const loadLists = useCallback(async () => {
     try {
-      const data = await AsyncStorage.getItem(LISTS_STORAGE_KEY);
-      if (data) {
-        const parsed = JSON.parse(data) as List[];
-        setLists(parsed);
-        console.log('Lists loaded:', parsed.length);
+      const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        setLists(JSON.parse(stored));
+      } else {
+        setLists([]);
       }
-    } catch (error) {
-      console.error('Failed to load lists:', error);
+    } catch (e) {
+      console.error('Failed to load lists:', e);
+      setLists([]);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   }, []);
 
-  // 리스트 저장
-  const saveLists = useCallback(async (newLists: List[]) => {
+  const saveToStorage = useCallback(async (newLists: List[]) => {
     try {
-      await AsyncStorage.setItem(LISTS_STORAGE_KEY, JSON.stringify(newLists));
-      console.log('Lists saved:', newLists.length);
-      return true;
-    } catch (error) {
-      console.error('Failed to save lists:', error);
-      throw error;
+      console.log('[LOG] Lists AsyncStorage에 저장:', newLists.length, '개 리스트');
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newLists));
+      console.log('[LOG] Lists AsyncStorage 저장 완료');
+    } catch (e) {
+      console.error('Failed to save lists:', e);
+      throw e;
     }
   }, []);
 
-  // 리스트 생성
-  const createList = useCallback(
-    async (title: string, description: string | undefined, categoryId: string) => {
+  useEffect(() => {
+    loadLists();
+  }, [loadLists]);
+
+  // 상태 변경 후 저장
+  useEffect(() => {
+    if (!loading) {
+      saveToStorage(lists).catch((e) => console.error('Auto-save failed:', e));
+    }
+  }, [lists, loading, saveToStorage]);
+
+  const addList = useCallback(
+    async (title: string) => {
       const newList: List = {
-        id: `list_${Date.now()}`,
+        id: `list_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
         title,
-        description,
-        categoryId,
         items: [],
         completionCount: 0,
         totalCount: 0,
@@ -51,126 +58,67 @@ export function useLists() {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-
-      try {
-        setLists((prev) => {
-          const updated = [...prev, newList];
-          saveLists(updated).catch((error) => {
-            console.error('Failed to create list:', error);
-          });
-          return updated;
-        });
-        return newList;
-      } catch (error) {
-        console.error('Error in createList:', error);
-        throw error;
-      }
+      setLists((prev) => [...prev, newList]);
+      return newList;
     },
-    [saveLists]
+    []
   );
 
-  // 리스트 아이템 추가
+  const deleteList = useCallback(
+    async (listId: string) => {
+      console.log('[LOG] deleteList 함수 호출:', listId);
+      setLists((prev) => {
+        const deletedList = prev.find((l) => l.id === listId);
+        console.log('[LOG] 삭제할 리스트:', deletedList?.title);
+        const newLists = prev.filter((l) => l.id !== listId);
+        console.log('[LOG] 삭제 후 남은 리스트:', newLists.length, '개');
+        return newLists;
+      });
+    },
+    []
+  );
+
   const addListItem = useCallback(
-    async (listId: string, itemTitle: string) => {
-      try {
-        setLists((prev) => {
-          const updated = prev.map((list) => {
-            if (list.id === listId) {
-              const newItem: ListItem = {
-                id: `item_${Date.now()}`,
-                listId,
-                title: itemTitle,
-                completed: false,
-                createdAt: new Date().toISOString(),
-              };
-              console.log(`[LOG] 리스트 항목 생성: "${itemTitle}" at ${newItem.createdAt}`);
-              return {
-                ...list,
-                items: [...list.items, newItem],
-                totalCount: list.totalCount + 1,
-                updatedAt: new Date().toISOString(),
-              };
-            }
-            return list;
-          });
-          saveLists(updated).catch((error) => {
-            console.error('Failed to add list item:', error);
-          });
-          return updated;
-        });
-      } catch (error) {
-        console.error('Error in addListItem:', error);
-        throw error;
-      }
+    async (listId: string, title: string) => {
+      const newItem: ListItem = {
+        id: `item_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        title,
+        completed: false,
+        note: '',
+        createdAt: new Date().toISOString(),
+      };
+      setLists((prev) =>
+        prev.map((list) => {
+          if (list.id === listId) {
+            return {
+              ...list,
+              items: [...list.items, newItem],
+              totalCount: list.totalCount + 1,
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return list;
+        })
+      );
+      return newItem;
     },
-    [saveLists]
+    []
   );
 
-  // 리스트 아이템 토글 (완료/미완료) - 메모 저장 기능 추가
-  const toggleListItem = useCallback(
-    async (listId: string, itemId: string, completionNote?: string) => {
-      try {
-        setLists((prev) => {
-          const updated = prev.map((list) => {
-            if (list.id === listId) {
-              const updatedItems = list.items.map((item) => {
-                if (item.id === itemId) {
-                  const isCompleting = !item.completed;
-                  const completedAt = isCompleting ? new Date().toISOString() : undefined;
-                  if (isCompleting) {
-                    console.log(`[LOG] 리스트 항목 완수: "${item.title}" at ${completedAt}${completionNote ? ` (메모: ${completionNote})` : ''}`);
-                  }
-                  return {
-                    ...item,
-                    completed: isCompleting,
-                    completedAt,
-                    completionNote: isCompleting ? completionNote : undefined,
-                  };
-                }
-                return item;
-              });
-
-              const completionCount = updatedItems.filter((i) => i.completed).length;
-              const isCompleted = completionCount === list.totalCount && list.totalCount > 0;
-
-              return {
-                ...list,
-                items: updatedItems,
-                completionCount,
-                isCompleted,
-                completedAt: isCompleted ? new Date().toISOString() : list.completedAt,
-                updatedAt: new Date().toISOString(),
-              };
-            }
-            return list;
-          });
-          saveLists(updated).catch((error) => {
-            console.error('Failed to toggle list item:', error);
-          });
-          return updated;
-        });
-      } catch (error) {
-        console.error('Error in toggleListItem:', error);
-        throw error;
-      }
-    },
-    [saveLists]
-  );
-
-  // 리스트 아이템 삭제
   const deleteListItem = useCallback(
     async (listId: string, itemId: string) => {
-      try {
-        const updated = lists.map((list) => {
+      console.log('[LOG] deleteListItem 함수 호출:', listId, itemId);
+      setLists((prev) =>
+        prev.map((list) => {
           if (list.id === listId) {
+            const itemToDelete = list.items.find((i) => i.id === itemId);
+            console.log('[LOG] 삭제할 항목:', itemToDelete?.title);
             const updatedItems = list.items.filter((i) => i.id !== itemId);
-            const wasCompleted = list.items.find((i) => i.id === itemId)?.completed ?? false;
+            const wasCompleted = itemToDelete?.completed ?? false;
             const completionCount = wasCompleted ? list.completionCount - 1 : list.completionCount;
             const totalCount = list.totalCount - 1;
             const isCompleted = completionCount === totalCount && totalCount > 0;
-
-            console.log(`[LOG] 항목 삭제: "${list.items.find((i) => i.id === itemId)?.title}" from "${list.title}"`);
-
+            console.log('[LOG] 삭제 후 항목:', updatedItems.length, '개');
             return {
               ...list,
               items: updatedItems,
@@ -181,102 +129,44 @@ export function useLists() {
             };
           }
           return list;
-        });
-        setLists(updated);
-        await saveLists(updated);
-      } catch (error) {
-        console.error('Error in deleteListItem:', error);
-        throw error;
-      }
+        })
+      );
     },
-    [lists, saveLists]
+    []
   );
 
-  // 리스트 삭제
-  const deleteList = useCallback(
-    async (listId: string) => {
-      try {
-        const updated = lists.filter((l) => l.id !== listId);
-        setLists(updated);
-        await saveLists(updated);
-        console.log('[LOG] 리스트 삭제 완료:', listId, '남은 리스트:', updated.length);
-      } catch (error) {
-        console.error('Error in deleteList:', error);
-        throw error;
-      }
+  const toggleListItem = useCallback(
+    async (listId: string, itemId: string) => {
+      setLists((prev) =>
+        prev.map((list) => {
+          if (list.id === listId) {
+            const updatedItems = list.items.map((item) => {
+              if (item.id === itemId) {
+                return { ...item, completed: !item.completed };
+              }
+              return item;
+            });
+            const completionCount = updatedItems.filter((i) => i.completed).length;
+            const isCompleted = completionCount === list.totalCount && list.totalCount > 0;
+            return {
+              ...list,
+              items: updatedItems,
+              completionCount,
+              isCompleted,
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return list;
+        })
+      );
     },
-    [lists, saveLists]
+    []
   );
 
-  // 리스트 조회
-  const getListById = useCallback(
-    (listId: string) => {
-      return lists.find((l) => l.id === listId);
-    },
-    [lists]
-  );
-
-  // 리스트 아이템 순서 변경
-  const reorderListItems = useCallback(
-    async (listId: string, fromIndex: number, toIndex: number) => {
-      try {
-        setLists((prev) => {
-          const updated = prev.map((list) => {
-            if (list.id === listId) {
-              const newItems = [...list.items];
-              const [removed] = newItems.splice(fromIndex, 1);
-              newItems.splice(toIndex, 0, removed);
-              return {
-                ...list,
-                items: newItems,
-                updatedAt: new Date().toISOString(),
-              };
-            }
-            return list;
-          });
-          saveLists(updated).catch((error) => {
-            console.error('Failed to reorder list items:', error);
-          });
-          return updated;
-        });
-      } catch (error) {
-        console.error('Error in reorderListItems:', error);
-        throw error;
-      }
-    },
-    [saveLists]
-  );
-
-  // 카테고리별 리스트 조회
-  const getListsByCategory = useCallback(
-    (categoryId: string) => {
-      return lists.filter((l) => l.categoryId === categoryId);
-    },
-    [lists]
-  );
-
-  // 리스트명 수정
-  const updateListTitle = useCallback(
-    async (listId: string, newTitle: string) => {
-      try {
-        const updated = lists.map((list) =>
-          list.id === listId ? { ...list, title: newTitle, updatedAt: new Date().toISOString() } : list
-        );
-        setLists(updated);
-        await saveLists(updated);
-      } catch (error) {
-        console.error('Error in updateListTitle:', error);
-        throw error;
-      }
-    },
-    [lists, saveLists]
-  );
-
-  // 리스트 항목 수정
   const updateListItemTitle = useCallback(
     async (listId: string, itemId: string, newTitle: string) => {
-      try {
-        const updated = lists.map((list) => {
+      setLists((prev) =>
+        prev.map((list) => {
           if (list.id === listId) {
             return {
               ...list,
@@ -287,88 +177,67 @@ export function useLists() {
             };
           }
           return list;
-        });
-        setLists(updated);
-        await saveLists(updated);
-      } catch (error) {
-        console.error('Error in updateListItemTitle:', error);
-        throw error;
-      }
+        })
+      );
     },
-    [lists, saveLists]
+    []
   );
 
-  // 메모 수정
   const updateListItemNote = useCallback(
-    async (listId: string, itemId: string, newNote: string) => {
-      try {
-        const updated = lists.map((list) => {
+    async (listId: string, itemId: string, note: string) => {
+      setLists((prev) =>
+        prev.map((list) => {
           if (list.id === listId) {
             return {
               ...list,
               items: list.items.map((item) =>
-                item.id === itemId ? { ...item, completionNote: newNote } : item
+                item.id === itemId ? { ...item, note } : item
               ),
               updatedAt: new Date().toISOString(),
             };
           }
           return list;
-        });
-        setLists(updated);
-        await saveLists(updated);
-      } catch (error) {
-        console.error('Error in updateListItemNote:', error);
-        throw error;
-      }
+        })
+      );
     },
-    [lists, saveLists]
+    []
   );
 
-  // 리스트 순서 변경
+  const updateListTitle = useCallback(
+    async (listId: string, newTitle: string) => {
+      setLists((prev) =>
+        prev.map((list) =>
+          list.id === listId ? { ...list, title: newTitle, updatedAt: new Date().toISOString() } : list
+        )
+      );
+    },
+    []
+  );
+
   const reorderLists = useCallback(
     async (fromIndex: number, toIndex: number) => {
-      try {
-        setLists((prev) => {
-          const updated = [...prev];
-          const [removed] = updated.splice(fromIndex, 1);
-          updated.splice(toIndex, 0, removed);
-          saveLists(updated).catch((error) => {
-            console.error('Failed to reorder lists:', error);
-          });
-          return updated;
-        });
-      } catch (error) {
-        console.error('Error in reorderLists:', error);
-        throw error;
-      }
+      setLists((prev) => {
+        const newLists = [...prev];
+        const [movedItem] = newLists.splice(fromIndex, 1);
+        newLists.splice(toIndex, 0, movedItem);
+        return newLists;
+      });
     },
-    [saveLists]
+    []
   );
-
-  // 초기 로드
-  useEffect(() => {
-    loadLists();
-  }, [loadLists]);
-
-  // 디버깅용: 리스트 상태 확인
-  useEffect(() => {
-    console.log('Lists state updated:', lists.length, 'lists');
-  }, [lists]);
 
   return {
     lists,
-    isLoading,
-    createList,
-    addListItem,
-    toggleListItem,
-    deleteListItem,
+    loading,
+    addList,
     deleteList,
-    updateListTitle,
+    addListItem,
+    deleteListItem,
+    toggleListItem,
     updateListItemTitle,
     updateListItemNote,
-    reorderListItems,
+    updateListTitle,
     reorderLists,
-    getListById,
-    getListsByCategory,
+    reload: loadLists,
   };
 }
