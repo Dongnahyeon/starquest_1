@@ -130,7 +130,7 @@ export function useAchievements() {
         };
       });
     },
-    []
+    [data.achievements]
   );
 
   const addCategory = useCallback(
