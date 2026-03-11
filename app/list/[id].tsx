@@ -113,6 +113,11 @@ export default function ListDetailScreen() {
   const handleSaveNote = async () => {
     if (!list || !selectedItemId) return;
     
+    // 모든 모달을 먼저 닫기
+    setShowNoteModal(false);
+    setShowItemNoteModal(false);
+    setShowItemDetailModal(false);
+    
     if (Platform.OS !== 'web') {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
@@ -132,12 +137,17 @@ export default function ListDetailScreen() {
       }),
     ]).start();
     
-    await toggleListItem(list.id, selectedItemId, noteText);
-    setShowNoteModal(false);
-    setShowItemNoteModal(false); // 메모 수정 모달도 함께 닫기
+    // 메모를 저장하고 항목 완료
+    const itemIdToToggle = selectedItemId;
+    const noteToSave = noteText;
+    
+    // 상태 초기화
     setSelectedItemId(null);
     setNoteText('');
     setSelectedItemNote('');
+    
+    // 항목 완료 처리
+    await toggleListItem(list.id, itemIdToToggle, noteToSave);
   };
 
   const handleViewNote = (itemId: string, itemTitle: string, note: string) => {
@@ -523,7 +533,7 @@ export default function ListDetailScreen() {
 
               <TouchableOpacity
                 style={styles.deleteItemButton}
-                onPress={() => handleViewItemDetail(item.id, item.title, item.completionNote || '')}
+                onPress={() => handleDeleteItem(item.id, item.title)}
                 activeOpacity={0.7}
               >
                 <IconSymbol name="pencil" size={16} color="#718096" />
