@@ -133,13 +133,41 @@ export function useAchievements() {
     []
   );
 
+  const reorderAchievements = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      setData((prev) => {
+        const newAchievements = [...prev.achievements];
+        const [movedItem] = newAchievements.splice(fromIndex, 1);
+        newAchievements.splice(toIndex, 0, movedItem);
+        return {
+          ...prev,
+          achievements: newAchievements,
+        };
+      });
+    },
+    []
+  );
+
+  const updateAchievementTitle = useCallback(
+    (id: string, newTitle: string) => {
+      setData((prev) => ({
+        ...prev,
+        achievements: prev.achievements.map((ach) =>
+          ach.id === id ? { ...ach, title: newTitle } : ach
+        ),
+      }));
+    },
+    []
+  );
+
   const addCategory = useCallback(
-    async (name: string, emoji: string, color: string) => {
+    (name: string, emoji: string, color: string) => {
       const newCategory: Category = {
         id: `cat_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
         name,
         emoji,
         color,
+        createdAt: new Date().toISOString(),
       };
       setData((prev) => ({
         ...prev,
@@ -172,15 +200,22 @@ export function useAchievements() {
     [data.categories]
   );
 
+  const totalCompletions = data.achievements.reduce((sum, a) => sum + a.completionCount, 0);
+  const totalAchievements = data.achievements.length;
+
   return {
     data,
     loading,
     achievements: data.achievements,
     categories: data.categories,
+    totalCompletions,
+    totalAchievements,
     addAchievement,
     completeAchievement,
     uncompleteAchievement,
     deleteAchievement,
+    reorderAchievements,
+    updateAchievementTitle,
     addCategory,
     getAchievementById,
     getCategoryById,

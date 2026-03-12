@@ -47,10 +47,11 @@ export function useLists() {
   }, [lists, loading, saveToStorage]);
 
   const addList = useCallback(
-    async (title: string) => {
+    async (title: string, categoryId: string = 'other') => {
       const newList: List = {
         id: `list_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
         title,
+        categoryId,
         items: [],
         completionCount: 0,
         totalCount: 0,
