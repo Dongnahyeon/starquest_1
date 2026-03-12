@@ -1,8 +1,21 @@
 import { useCallback, useMemo } from 'react';
 import { List } from '@/types/list';
-import { UserStats, BadgeType, BADGE_DEFINITIONS } from '@/types/badge';
+import { Achievement } from '@/types/achievement';
+import { Badge, ALL_BADGES } from '@/types/badge';
 
-export function useStats(lists: List[]) {
+export interface UserStats {
+  totalListsCreated: number;
+  totalListsCompleted: number;
+  totalItemsAdded: number;
+  totalItemsCompleted: number;
+  totalAchievementsCreated: number;
+  totalAchievementsCompleted: number;
+  appUsageDays: number;
+  longestStreak: number;
+  unlockedBadges: Badge[];
+}
+
+export function useStats(lists: List[], achievements: Achievement[], appCreatedAt?: string) {
   // 통계 계산
   const stats = useMemo<UserStats>(() => {
     const completedLists = lists.filter((l) => l.isCompleted);
@@ -13,21 +26,17 @@ export function useStats(lists: List[]) {
     const totalItemsAdded = lists.reduce((sum, l) => sum + l.totalCount, 0);
     const totalItemsCompleted = lists.reduce((sum, l) => sum + l.completionCount, 0);
 
-    // 완료 시간 계산 (일 단위)
-    let completionDays: number[] = [];
-    completedLists.forEach((list) => {
-      if (list.createdAt && list.completedAt) {
-        const created = new Date(list.createdAt).getTime();
-        const completed = new Date(list.completedAt).getTime();
-        const days = Math.ceil((completed - created) / (1000 * 60 * 60 * 24));
-        completionDays.push(Math.max(days, 1)); // 최소 1일
-      }
-    });
+    // 별 통계
+    const totalAchievementsCreated = achievements.length;
+    const totalAchievementsCompleted = achievements.filter((a) => a.completionCount > 0).length;
 
-    const averageCompletionDays =
-      completionDays.length > 0 ? Math.round(completionDays.reduce((a, b) => a + b, 0) / completionDays.length) : 0;
-    const fastestCompletionDays = completionDays.length > 0 ? Math.min(...completionDays) : 0;
-    const slowestCompletionDays = completionDays.length > 0 ? Math.max(...completionDays) : 0;
+    // 앱 사용 일수 계산
+    let appUsageDays = 0;
+    if (appCreatedAt) {
+      const created = new Date(appCreatedAt).getTime();
+      const now = new Date().getTime();
+      appUsageDays = Math.floor((now - created) / (1000 * 60 * 60 * 24));
+    }
 
     // 연속 완료 일수 계산 (간단한 버전: 최근 완료 리스트 기준)
     const sortedCompleted = completedLists.sort(
@@ -56,103 +65,113 @@ export function useStats(lists: List[]) {
       totalListsCompleted,
       totalItemsAdded,
       totalItemsCompleted,
-      averageCompletionDays,
-      fastestCompletionDays,
-      slowestCompletionDays,
+      totalAchievementsCreated,
+      totalAchievementsCompleted,
+      appUsageDays,
       longestStreak,
       unlockedBadges: [],
     };
-  }, [lists]);
+  }, [lists, achievements, appCreatedAt]);
 
   // 배지 획득 로직
-  const checkBadges = useCallback((): BadgeType[] => {
-    const unlockedBadges: BadgeType[] = [];
-    const completedLists = lists.filter((l) => l.isCompleted);
+  const checkBadges = useCallback((): Badge[] => {
+    const unlockedBadges: Badge[] = [];
 
-    // first_list: 첫 번째 리스트 완료
-    if (completedLists.length >= 1) {
-      unlockedBadges.push('first_list');
+    // 누적 리스트 생성 배지
+    if (stats.totalListsCreated >= 1) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'list_created_1')!);
+    }
+    if (stats.totalListsCreated >= 10) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'list_created_10')!);
+    }
+    if (stats.totalListsCreated >= 100) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'list_created_100')!);
+    }
+    if (stats.totalListsCreated >= 1000) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'list_created_1000')!);
     }
 
-    // list_collector: 3개 리스트 완료
-    if (completedLists.length >= 3) {
-      unlockedBadges.push('list_collector');
+    // 누적 리스트 완료 배지
+    if (stats.totalListsCompleted >= 1) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'list_completed_1')!);
+    }
+    if (stats.totalListsCompleted >= 10) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'list_completed_10')!);
+    }
+    if (stats.totalListsCompleted >= 100) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'list_completed_100')!);
+    }
+    if (stats.totalListsCompleted >= 1000) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'list_completed_1000')!);
     }
 
-    // list_master: 10개 리스트 완료
-    if (completedLists.length >= 10) {
-      unlockedBadges.push('list_master');
+    // 누적 항목 추가 배지
+    if (stats.totalItemsAdded >= 10) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'item_added_10')!);
+    }
+    if (stats.totalItemsAdded >= 100) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'item_added_100')!);
+    }
+    if (stats.totalItemsAdded >= 1000) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'item_added_1000')!);
+    }
+    if (stats.totalItemsAdded >= 10000) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'item_added_10000')!);
     }
 
-    // speed_runner: 1일 내에 리스트 완료
-    completedLists.forEach((list) => {
-      if (list.createdAt && list.completedAt) {
-        const created = new Date(list.createdAt).getTime();
-        const completed = new Date(list.completedAt).getTime();
-        const days = Math.ceil((completed - created) / (1000 * 60 * 60 * 24));
-        if (days <= 1) {
-          unlockedBadges.push('speed_runner');
-        }
-      }
-    });
-
-    // patient_one: 30일 이상 걸려 리스트 완료
-    completedLists.forEach((list) => {
-      if (list.createdAt && list.completedAt) {
-        const created = new Date(list.createdAt).getTime();
-        const completed = new Date(list.completedAt).getTime();
-        const days = Math.ceil((completed - created) / (1000 * 60 * 60 * 24));
-        if (days >= 30) {
-          unlockedBadges.push('patient_one');
-        }
-      }
-    });
-
-    // bulk_adder: 한 리스트에 50개 이상 항목 추가
-    lists.forEach((list) => {
-      if (list.totalCount >= 50) {
-        unlockedBadges.push('bulk_adder');
-      }
-    });
-
-    // perfectionist: 완벽하게 완료한 리스트 5개
-    const perfectLists = completedLists.filter((l) => l.completionCount === l.totalCount && l.totalCount > 0);
-    if (perfectLists.length >= 5) {
-      unlockedBadges.push('perfectionist');
+    // 누적 항목 완료 배지
+    if (stats.totalItemsCompleted >= 10) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'item_completed_10')!);
+    }
+    if (stats.totalItemsCompleted >= 100) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'item_completed_100')!);
+    }
+    if (stats.totalItemsCompleted >= 1000) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'item_completed_1000')!);
+    }
+    if (stats.totalItemsCompleted >= 10000) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'item_completed_10000')!);
     }
 
-    // comeback_kid: 7일 이상 중단 후 리스트 완료
-    lists.forEach((list) => {
-      if (list.items.length > 0) {
-        const sortedItems = [...list.items].sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        if (sortedItems.length >= 2) {
-          const firstItemDate = new Date(sortedItems[sortedItems.length - 1].createdAt).getTime();
-          const lastItemDate = new Date(sortedItems[0].createdAt).getTime();
-          const daysDiff = Math.floor((lastItemDate - firstItemDate) / (1000 * 60 * 60 * 24));
-          if (daysDiff >= 7 && list.isCompleted) {
-            unlockedBadges.push('comeback_kid');
-          }
-        }
-      }
-    });
+    // 시간 경과 배지
+    if (stats.appUsageDays >= 365) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'time_1year')!);
+    }
+    if (stats.appUsageDays >= 1825) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'time_5years')!);
+    }
+    if (stats.appUsageDays >= 3650) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'time_10years')!);
+    }
+    if (stats.appUsageDays >= 7300) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'time_20years')!);
+    }
 
-    // marathon_runner: 100일 이상 걸려 리스트 완료
-    completedLists.forEach((list) => {
-      if (list.createdAt && list.completedAt) {
-        const created = new Date(list.createdAt).getTime();
-        const completed = new Date(list.completedAt).getTime();
-        const days = Math.ceil((completed - created) / (1000 * 60 * 60 * 24));
-        if (days >= 100) {
-          unlockedBadges.push('marathon_runner');
-        }
-      }
-    });
+    // 연속 활동 배지
+    if (stats.longestStreak >= 100) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'streak_100days')!);
+    }
+    if (stats.longestStreak >= 365) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'streak_1year')!);
+    }
+    if (stats.longestStreak >= 1825) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'streak_5years')!);
+    }
+
+    // 특별 이벤트 배지
+    if (stats.totalAchievementsCompleted >= 1) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'special_first_achievement')!);
+    }
+    if (stats.appUsageDays >= 1000) {
+      unlockedBadges.push(ALL_BADGES.find((b) => b.id === 'special_1000days')!);
+    }
+
+    // 활동 패턴 배지 (간단한 버전 - 실제로는 시간대별 활동 분석 필요)
+    // TODO: 시간대별 활동 분석 로직 추가
 
     // 중복 제거
-    return Array.from(new Set(unlockedBadges));
-  }, [lists]);
+    return Array.from(new Map(unlockedBadges.map((b) => [b.id, b])).values());
+  }, [stats]);
 
   const unlockedBadges = checkBadges();
 

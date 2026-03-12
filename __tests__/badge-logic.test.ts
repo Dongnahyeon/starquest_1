@@ -1,67 +1,71 @@
 import { describe, it, expect } from 'vitest';
-import { BADGE_DEFINITIONS, BadgeType } from '@/types/badge';
+import { ALL_BADGES } from '@/types/badge';
 import { List } from '@/types/list';
 
 /**
  * 배지 획득 로직을 테스트하는 유틸리티 함수들
  */
 
-function checkFirstListBadge(lists: List[]): boolean {
+function checkListCreatedBadge(lists: List[], threshold: number): boolean {
+  return lists.length >= threshold;
+}
+
+function checkListCompletedBadge(lists: List[], threshold: number): boolean {
   const completedLists = lists.filter((l) => l.isCompleted);
-  return completedLists.length >= 1;
+  return completedLists.length >= threshold;
 }
 
-function checkListCollectorBadge(lists: List[]): boolean {
-  const completedLists = lists.filter((l) => l.isCompleted);
-  return completedLists.length >= 3;
+function checkItemAddedBadge(lists: List[], threshold: number): boolean {
+  const totalItems = lists.reduce((sum, l) => sum + l.totalCount, 0);
+  return totalItems >= threshold;
 }
 
-function checkListMasterBadge(lists: List[]): boolean {
-  const completedLists = lists.filter((l) => l.isCompleted);
-  return completedLists.length >= 10;
-}
-
-function checkSpeedRunnerBadge(lists: List[]): boolean {
-  return lists.some((list) => {
-    if (list.createdAt && list.completedAt) {
-      const created = new Date(list.createdAt).getTime();
-      const completed = new Date(list.completedAt).getTime();
-      const days = Math.ceil((completed - created) / (1000 * 60 * 60 * 24));
-      return days <= 1;
-    }
-    return false;
-  });
-}
-
-function checkPatientOneBadge(lists: List[]): boolean {
-  return lists.some((list) => {
-    if (list.createdAt && list.completedAt) {
-      const created = new Date(list.createdAt).getTime();
-      const completed = new Date(list.completedAt).getTime();
-      const days = Math.ceil((completed - created) / (1000 * 60 * 60 * 24));
-      return days >= 30;
-    }
-    return false;
-  });
-}
-
-function checkBulkAdderBadge(lists: List[]): boolean {
-  return lists.some((list) => list.totalCount >= 50);
-}
-
-function checkPerfectionistBadge(lists: List[]): boolean {
-  const completedLists = lists.filter((l) => l.isCompleted);
-  const perfectLists = completedLists.filter((l) => l.completionCount === l.totalCount && l.totalCount > 0);
-  return perfectLists.length >= 5;
+function checkItemCompletedBadge(lists: List[], threshold: number): boolean {
+  const totalCompleted = lists.reduce((sum, l) => sum + l.completionCount, 0);
+  return totalCompleted >= threshold;
 }
 
 describe('Badge Logic', () => {
-  describe('first_list badge', () => {
-    it('should unlock when 1 list is completed', () => {
+  describe('list_created badges', () => {
+    it('should unlock list_created_1 badge when 1 list is created', () => {
       const lists: List[] = [
         {
           id: '1',
           title: '첫 리스트',
+          categoryId: 'test',
+          items: [],
+          totalCount: 1,
+          completionCount: 0,
+          isCompleted: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ];
+      expect(checkListCreatedBadge(lists, 1)).toBe(true);
+    });
+
+    it('should unlock list_created_10 badge when 10 lists are created', () => {
+      const lists: List[] = Array.from({ length: 10 }, (_, i) => ({
+        id: `${i}`,
+        title: `리스트 ${i}`,
+        categoryId: 'test',
+        items: [],
+        totalCount: 1,
+        completionCount: 0,
+        isCompleted: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }));
+      expect(checkListCreatedBadge(lists, 10)).toBe(true);
+    });
+  });
+
+  describe('list_completed badges', () => {
+    it('should unlock list_completed_1 badge when 1 list is completed', () => {
+      const lists: List[] = [
+        {
+          id: '1',
+          title: '완료된 리스트',
           categoryId: 'test',
           items: [],
           totalCount: 1,
@@ -72,54 +76,13 @@ describe('Badge Logic', () => {
           updatedAt: new Date().toISOString(),
         },
       ];
-      expect(checkFirstListBadge(lists)).toBe(true);
+      expect(checkListCompletedBadge(lists, 1)).toBe(true);
     });
 
-    it('should not unlock when no lists are completed', () => {
-      const lists: List[] = [];
-      expect(checkFirstListBadge(lists)).toBe(false);
-    });
-  });
-
-  describe('list_collector badge', () => {
-    it('should unlock when 3 lists are completed', () => {
-      const lists: List[] = Array.from({ length: 3 }, (_, i) => ({
-        id: `${i}`,
-        title: `리스트 ${i}`,
-        categoryId: 'test',
-        items: [],
-        totalCount: 1,
-        completionCount: 1,
-        isCompleted: true,
-        createdAt: new Date().toISOString(),
-        completedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }));
-      expect(checkListCollectorBadge(lists)).toBe(true);
-    });
-
-    it('should not unlock when less than 3 lists are completed', () => {
-      const lists: List[] = Array.from({ length: 2 }, (_, i) => ({
-        id: `${i}`,
-        title: `리스트 ${i}`,
-        categoryId: 'test',
-        items: [],
-        totalCount: 1,
-        completionCount: 1,
-        isCompleted: true,
-        createdAt: new Date().toISOString(),
-        completedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }));
-      expect(checkListCollectorBadge(lists)).toBe(false);
-    });
-  });
-
-  describe('list_master badge', () => {
-    it('should unlock when 10 lists are completed', () => {
+    it('should unlock list_completed_10 badge when 10 lists are completed', () => {
       const lists: List[] = Array.from({ length: 10 }, (_, i) => ({
         id: `${i}`,
-        title: `리스트 ${i}`,
+        title: `완료된 리스트 ${i}`,
         categoryId: 'test',
         items: [],
         totalCount: 1,
@@ -129,201 +92,126 @@ describe('Badge Logic', () => {
         completedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }));
-      expect(checkListMasterBadge(lists)).toBe(true);
+      expect(checkListCompletedBadge(lists, 10)).toBe(true);
     });
   });
 
-  describe('speed_runner badge', () => {
-    it('should unlock for lists completed in 1 day', () => {
-      const lists: List[] = [
-        {
-          id: '1',
-          title: '빠른 리스트',
-          categoryId: 'test',
-          items: [],
-          totalCount: 5,
-          completionCount: 5,
-          isCompleted: true,
-          createdAt: new Date('2026-01-01').toISOString(),
-          completedAt: new Date('2026-01-01').toISOString(),
-          updatedAt: new Date('2026-01-01').toISOString(),
-        },
-      ];
-      expect(checkSpeedRunnerBadge(lists)).toBe(true);
-    });
-
-    it('should not unlock for lists taking more than 1 day', () => {
-      const lists: List[] = [
-        {
-          id: '1',
-          title: '느린 리스트',
-          categoryId: 'test',
-          items: [],
-          totalCount: 5,
-          completionCount: 5,
-          isCompleted: true,
-          createdAt: new Date('2026-01-01').toISOString(),
-          completedAt: new Date('2026-01-03').toISOString(),
-          updatedAt: new Date('2026-01-03').toISOString(),
-        },
-      ];
-      expect(checkSpeedRunnerBadge(lists)).toBe(false);
-    });
-  });
-
-  describe('patient_one badge', () => {
-    it('should unlock for lists taking 30+ days', () => {
-      const lists: List[] = [
-        {
-          id: '1',
-          title: '오래된 리스트',
-          categoryId: 'test',
-          items: [],
-          totalCount: 10,
-          completionCount: 10,
-          isCompleted: true,
-          createdAt: new Date('2026-01-01').toISOString(),
-          completedAt: new Date('2026-02-01').toISOString(),
-          updatedAt: new Date('2026-02-01').toISOString(),
-        },
-      ];
-      expect(checkPatientOneBadge(lists)).toBe(true);
-    });
-
-    it('should not unlock for lists taking less than 30 days', () => {
-      const lists: List[] = [
-        {
-          id: '1',
-          title: '짧은 리스트',
-          categoryId: 'test',
-          items: [],
-          totalCount: 10,
-          completionCount: 10,
-          isCompleted: true,
-          createdAt: new Date('2026-01-01').toISOString(),
-          completedAt: new Date('2026-01-15').toISOString(),
-          updatedAt: new Date('2026-01-15').toISOString(),
-        },
-      ];
-      expect(checkPatientOneBadge(lists)).toBe(false);
-    });
-  });
-
-  describe('bulk_adder badge', () => {
-    it('should unlock for lists with 50+ items', () => {
+  describe('item_added badges', () => {
+    it('should unlock item_added_10 badge when 10 items are added', () => {
       const lists: List[] = [
         {
           id: '1',
           title: '많은 항목',
           categoryId: 'test',
-          items: Array.from({ length: 50 }, (_, i) => ({
+          items: Array.from({ length: 10 }, (_, i) => ({
             id: `i${i}`,
             listId: '1',
             title: `항목 ${i}`,
             completed: false,
             createdAt: new Date().toISOString(),
           })),
-          totalCount: 50,
+          totalCount: 10,
           completionCount: 0,
           isCompleted: false,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },
       ];
-      expect(checkBulkAdderBadge(lists)).toBe(true);
+      expect(checkItemAddedBadge(lists, 10)).toBe(true);
     });
 
-    it('should not unlock for lists with less than 50 items', () => {
+    it('should unlock item_added_100 badge when 100 items are added', () => {
       const lists: List[] = [
         {
           id: '1',
-          title: '적은 항목',
+          title: '매우 많은 항목',
           categoryId: 'test',
-          items: Array.from({ length: 30 }, (_, i) => ({
+          items: Array.from({ length: 100 }, (_, i) => ({
             id: `i${i}`,
             listId: '1',
             title: `항목 ${i}`,
             completed: false,
             createdAt: new Date().toISOString(),
           })),
-          totalCount: 30,
+          totalCount: 100,
           completionCount: 0,
           isCompleted: false,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },
       ];
-      expect(checkBulkAdderBadge(lists)).toBe(false);
+      expect(checkItemAddedBadge(lists, 100)).toBe(true);
     });
   });
 
-  describe('perfectionist badge', () => {
-    it('should unlock for 5 perfectly completed lists', () => {
-      const lists: List[] = Array.from({ length: 5 }, (_, i) => ({
-        id: `${i}`,
-        title: `완벽한 리스트 ${i}`,
-        categoryId: 'test',
-        items: Array.from({ length: 3 }, (_, j) => ({
-          id: `i${j}`,
-          listId: `${i}`,
-          title: `항목 ${j}`,
-          completed: true,
+  describe('item_completed badges', () => {
+    it('should unlock item_completed_10 badge when 10 items are completed', () => {
+      const lists: List[] = [
+        {
+          id: '1',
+          title: '완료된 항목',
+          categoryId: 'test',
+          items: Array.from({ length: 10 }, (_, i) => ({
+            id: `i${i}`,
+            listId: '1',
+            title: `항목 ${i}`,
+            completed: true,
+            createdAt: new Date().toISOString(),
+          })),
+          totalCount: 10,
+          completionCount: 10,
+          isCompleted: true,
           createdAt: new Date().toISOString(),
-        })),
-        totalCount: 3,
-        completionCount: 3,
-        isCompleted: true,
-        createdAt: new Date().toISOString(),
-        completedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }));
-      expect(checkPerfectionistBadge(lists)).toBe(true);
+          completedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ];
+      expect(checkItemCompletedBadge(lists, 10)).toBe(true);
     });
 
-    it('should not unlock for less than 5 perfectly completed lists', () => {
-      const lists: List[] = Array.from({ length: 3 }, (_, i) => ({
-        id: `${i}`,
-        title: `완벽한 리스트 ${i}`,
-        categoryId: 'test',
-        items: Array.from({ length: 3 }, (_, j) => ({
-          id: `i${j}`,
-          listId: `${i}`,
-          title: `항목 ${j}`,
-          completed: true,
+    it('should unlock item_completed_100 badge when 100 items are completed', () => {
+      const lists: List[] = [
+        {
+          id: '1',
+          title: '매우 많은 완료 항목',
+          categoryId: 'test',
+          items: Array.from({ length: 100 }, (_, i) => ({
+            id: `i${i}`,
+            listId: '1',
+            title: `항목 ${i}`,
+            completed: true,
+            createdAt: new Date().toISOString(),
+          })),
+          totalCount: 100,
+          completionCount: 100,
+          isCompleted: true,
           createdAt: new Date().toISOString(),
-        })),
-        totalCount: 3,
-        completionCount: 3,
-        isCompleted: true,
-        createdAt: new Date().toISOString(),
-        completedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }));
-      expect(checkPerfectionistBadge(lists)).toBe(false);
+          completedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ];
+      expect(checkItemCompletedBadge(lists, 100)).toBe(true);
     });
   });
 
   describe('badge definitions', () => {
     it('should have all badge definitions', () => {
-      const badgeIds: BadgeType[] = [
-        'first_list',
-        'list_collector',
-        'list_master',
-        'speed_runner',
-        'patient_one',
-        'bulk_adder',
-        'perfectionist',
-        'comeback_kid',
-        'marathon_runner',
-      ];
-
-      badgeIds.forEach((badgeId) => {
-        expect(BADGE_DEFINITIONS[badgeId]).toBeDefined();
-        expect(BADGE_DEFINITIONS[badgeId].name).toBeTruthy();
-        expect(BADGE_DEFINITIONS[badgeId].description).toBeTruthy();
-        expect(BADGE_DEFINITIONS[badgeId].emoji).toBeTruthy();
-        expect(BADGE_DEFINITIONS[badgeId].color).toBeTruthy();
+      expect(ALL_BADGES.length).toBeGreaterThan(0);
+      
+      ALL_BADGES.forEach((badge) => {
+        expect(badge.id).toBeTruthy();
+        expect(badge.name).toBeTruthy();
+        expect(badge.description).toBeTruthy();
+        expect(badge.emoji).toBeTruthy();
+        expect(badge.category).toBeTruthy();
+        expect(badge.thresholdType).toBeTruthy();
+        expect(badge.threshold).toBeGreaterThanOrEqual(0);
       });
+    });
+
+    it('should have 20-25 badges', () => {
+      expect(ALL_BADGES.length).toBeGreaterThanOrEqual(20);
+      expect(ALL_BADGES.length).toBeLessThanOrEqual(25);
     });
   });
 });

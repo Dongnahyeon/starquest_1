@@ -11,24 +11,26 @@ import {
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenContainer } from '@/components/screen-container';
-import { BadgeDisplay, BadgeGrid, BadgeDetailModal } from '@/components/BadgeDisplay';
+import { BadgeDisplay } from '@/components/BadgeDisplay';
 import { useListsContext } from '@/lib/lists-context';
+import { useAchievementsContext } from '@/lib/achievements-context';
 import { useStats } from '@/hooks/use-stats';
-import { BADGE_DEFINITIONS, BadgeType } from '@/types/badge';
+import { ALL_BADGES, Badge } from '@/types/badge';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 
 export default function StatsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { lists } = useListsContext();
-  const { stats } = useStats(lists);
-  const [selectedBadge, setSelectedBadge] = useState<BadgeType | null>(null);
+  const { achievements } = useAchievementsContext();
+  const { stats } = useStats(lists, achievements);
+  const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
   const [showBadgeDetail, setShowBadgeDetail] = useState(false);
 
   const completedLists = lists.filter((l) => l.isCompleted);
 
-  const handleBadgePress = (badgeId: BadgeType) => {
-    setSelectedBadge(badgeId);
+  const handleBadgePress = (badge: Badge) => {
+    setSelectedBadge(badge);
     setShowBadgeDetail(true);
   };
 
@@ -67,39 +69,37 @@ export default function StatsScreen() {
 
           {/* Total Items */}
           <View style={styles.statCard}>
-            <Text style={styles.statEmoji}>🎯</Text>
+            <Text style={styles.statEmoji}>➕</Text>
             <Text style={styles.statValue}>{stats.totalItemsAdded}</Text>
             <Text style={styles.statLabel}>추가한 항목</Text>
           </View>
 
           {/* Completed Items */}
           <View style={styles.statCard}>
-            <Text style={styles.statEmoji}>⭐</Text>
+            <Text style={styles.statEmoji}>✔️</Text>
             <Text style={styles.statValue}>{stats.totalItemsCompleted}</Text>
             <Text style={styles.statLabel}>완료한 항목</Text>
           </View>
         </View>
 
-        {/* Completion Time Stats */}
-        {stats.totalListsCompleted > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>⏱️ 완료 시간 통계</Text>
-            <View style={styles.timeStatsContainer}>
-              <View style={styles.timeStat}>
-                <Text style={styles.timeStatLabel}>평균 완료 시간</Text>
-                <Text style={styles.timeStatValue}>{stats.averageCompletionDays}일</Text>
-              </View>
-              <View style={styles.timeStat}>
-                <Text style={styles.timeStatLabel}>가장 빠른 완료</Text>
-                <Text style={styles.timeStatValue}>{stats.fastestCompletionDays}일</Text>
-              </View>
-              <View style={styles.timeStat}>
-                <Text style={styles.timeStatLabel}>가장 긴 완료</Text>
-                <Text style={styles.timeStatValue}>{stats.slowestCompletionDays}일</Text>
-              </View>
+        {/* Time & Streak Stats */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>⏱️ 활동 통계</Text>
+          <View style={styles.timeStatsContainer}>
+            <View style={styles.timeStat}>
+              <Text style={styles.timeStatLabel}>앱 사용 기간</Text>
+              <Text style={styles.timeStatValue}>{stats.appUsageDays}일</Text>
+            </View>
+            <View style={styles.timeStat}>
+              <Text style={styles.timeStatLabel}>최장 연속</Text>
+              <Text style={styles.timeStatValue}>{stats.longestStreak}일</Text>
+            </View>
+            <View style={styles.timeStat}>
+              <Text style={styles.timeStatLabel}>별 완료</Text>
+              <Text style={styles.timeStatValue}>{stats.totalAchievementsCompleted}</Text>
             </View>
           </View>
-        )}
+        </View>
 
         {/* Completion Rate */}
         {stats.totalListsCreated > 0 && (
@@ -126,7 +126,7 @@ export default function StatsScreen() {
         {/* Badges Section */}
         <View style={styles.section}>
           <View style={styles.badgesSectionHeader}>
-            <Text style={styles.sectionTitle}>🏆 배지 ({stats.unlockedBadges.length}/{Object.keys(BADGE_DEFINITIONS).length})</Text>
+            <Text style={styles.sectionTitle}>🏆 배지 ({stats.unlockedBadges.length}/{ALL_BADGES.length})</Text>
           </View>
 
           {stats.unlockedBadges.length > 0 ? (
@@ -141,15 +141,22 @@ export default function StatsScreen() {
           ) : (
             <View style={styles.noBadgesContainer}>
               <Text style={styles.noBadgesText}>아직 배지가 없어요</Text>
-              <Text style={styles.noBadgesSubtext}>리스트를 완료해서 배지를 획득해보세요!</Text>
+              <Text style={styles.noBadgesSubtext}>계속 활동해서 배지를 획득해보세요!</Text>
             </View>
           )}
 
-          <Text style={styles.badgesSubtitle}>모든 배지</Text>
-          <BadgeGrid
-            unlockedBadges={stats.unlockedBadges}
-            onPress={handleBadgePress}
-          />
+          <Text style={styles.badgesSubtitle}>다음 배지 목표</Text>
+          <View style={styles.nextBadgesContainer}>
+            {ALL_BADGES.slice(0, 3).map((badge) => {
+              const isUnlocked = stats.unlockedBadges.some((b) => b.id === badge.id);
+              return (
+                <View key={badge.id} style={[styles.nextBadge, isUnlocked && styles.nextBadgeUnlocked]}>
+                  <Text style={styles.nextBadgeEmoji}>{badge.emoji}</Text>
+                  <Text style={styles.nextBadgeName} numberOfLines={1}>{badge.name}</Text>
+                </View>
+              );
+            })}
+          </View>
         </View>
 
         {/* Tips Section */}
@@ -157,10 +164,10 @@ export default function StatsScreen() {
           <Text style={styles.sectionTitle}>💡 팁</Text>
           <View style={styles.tipCard}>
             <Text style={styles.tipText}>
-              • 다양한 배지를 획득해보세요{'\n'}
-              • 리스트를 빠르게 완료하면 ⚡ 배지를 얻을 수 있어요{'\n'}
-              • 오래 진행한 리스트는 🏃 배지를 줍니다{'\n'}
-              • 완벽하게 완료한 리스트 5개로 💎 배지를 획득하세요
+              • 30-50년 장기 사용을 목표로 배지를 설계했어요{'\n'}
+              • 누적 횟수로 배지가 해금되므로 꾸준히 활동하세요{'\n'}
+              • 시간 경과 배지로 장기 헌신을 인정합니다{'\n'}
+              • 특별 이정표 배지로 특정 순간을 기념해요
             </Text>
           </View>
         </View>
@@ -183,10 +190,18 @@ export default function StatsScreen() {
             </Pressable>
 
             {selectedBadge && (
-              <BadgeDetailModal
-                badge={BADGE_DEFINITIONS[selectedBadge]}
-                isUnlocked={stats.unlockedBadges.includes(selectedBadge)}
-              />
+              <View style={styles.badgeDetailContainer}>
+                <Text style={styles.badgeDetailEmoji}>{selectedBadge.emoji}</Text>
+                <Text style={styles.badgeDetailName}>{selectedBadge.name}</Text>
+                <Text style={styles.badgeDetailDescription}>{selectedBadge.description}</Text>
+                <View style={styles.badgeDetailMeta}>
+                  <Text style={styles.badgeDetailMetaText}>
+                    {selectedBadge.thresholdType === 'count' && `${selectedBadge.threshold}회 달성`}
+                    {selectedBadge.thresholdType === 'days' && `${selectedBadge.threshold}일 경과`}
+                    {selectedBadge.thresholdType === 'event' && '특별 이벤트'}
+                  </Text>
+                </View>
+              </View>
             )}
           </View>
         </View>
@@ -322,6 +337,34 @@ const styles = StyleSheet.create({
     color: '#718096',
     marginBottom: 12,
   },
+  nextBadgesContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  nextBadge: {
+    flex: 1,
+    backgroundColor: '#111827',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#1E2A3A',
+    padding: 12,
+    alignItems: 'center',
+    opacity: 0.6,
+  },
+  nextBadgeUnlocked: {
+    opacity: 1,
+    borderColor: '#4ECDC4',
+  },
+  nextBadgeEmoji: {
+    fontSize: 28,
+    marginBottom: 4,
+  },
+  nextBadgeName: {
+    fontSize: 11,
+    color: '#718096',
+    textAlign: 'center',
+  },
   noBadgesContainer: {
     backgroundColor: '#111827',
     borderRadius: 12,
@@ -379,5 +422,35 @@ const styles = StyleSheet.create({
     backgroundColor: '#111827',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  badgeDetailContainer: {
+    alignItems: 'center',
+  },
+  badgeDetailEmoji: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  badgeDetailName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#E2E8F0',
+    marginBottom: 8,
+  },
+  badgeDetailDescription: {
+    fontSize: 13,
+    color: '#CBD5E0',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  badgeDetailMeta: {
+    backgroundColor: '#111827',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  badgeDetailMetaText: {
+    fontSize: 12,
+    color: '#4ECDC4',
+    fontWeight: '600',
   },
 });
