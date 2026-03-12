@@ -35,8 +35,8 @@ export default function StatsScreen() {
   };
 
   return (
-    <ScreenContainer className="flex-1 bg-background">
-      <ScrollView contentContainerStyle={{ paddingBottom: 40, flexGrow: 1 }}>
+    <View style={{ flex: 1, backgroundColor: '#0A0E1A' }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: insets.bottom + 40 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
           <View>
@@ -206,7 +206,7 @@ export default function StatsScreen() {
           </View>
         </View>
       </Modal>
-    </ScreenContainer>
+    </View>
   );
 }
 
