@@ -480,6 +480,12 @@ export default function ListDetailScreen() {
 
             <View style={styles.itemActions} pointerEvents="box-none">
               <TouchableOpacity
+                onPress={() => handleHideItem(item.id, item.title)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={{ fontSize: 16 }}>🎯</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
                 onPress={() => handleEditItem(item.id, item.title)}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
