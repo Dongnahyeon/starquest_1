@@ -266,10 +266,7 @@ export function useLists() {
   );
 
   return {
-    lists: lists.map(list => ({
-      ...list,
-      items: list.items.filter(item => !item.isHidden)
-    })),
+    lists,
     loading,
     addList,
     deleteList,

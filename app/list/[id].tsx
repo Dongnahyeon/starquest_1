@@ -283,7 +283,7 @@ export default function ListDetailScreen() {
       </View>
 
       <FlatList
-        data={list.items}
+        data={list.items.filter(item => !item.isHidden)}
         keyExtractor={(item) => item.id}
         scrollEnabled={true}
         nestedScrollEnabled={true}
@@ -421,8 +421,8 @@ export default function ListDetailScreen() {
             </View>
 
             {/* Items title */}
-            {list.items.length > 0 && (
-              <Text style={styles.itemsTitle}>항목 ({list.items.length}) - 드래그로 순서 변경</Text>
+            {list.items.filter(item => !item.isHidden).length > 0 && (
+              <Text style={styles.itemsTitle}>항목 ({list.items.filter(item => !item.isHidden).length}) - 드래그로 순서 변경</Text>
             )}
           </>
         }
