@@ -102,12 +102,7 @@ export function ConstellationView({ category, achievements, onStarPress }: Const
           // 모든 별은 동일한 크기 유지
           // 카테고리 내 별 개수에 따라 크기 조정
           const starCount = positions.length;
-          let baseSizeByCount = 10; // 1~6개
-          if (starCount >= 7 && starCount <= 15) {
-            baseSizeByCount = 8; // 7~15개
-          } else if (starCount > 15) {
-            baseSizeByCount = 6; // 16개 이상
-          }
+          let baseSizeByCount = 2; // 기본 크기 2px
           const glowSize = baseSizeByCount + glowIntensity * 12;
 
           return (

@@ -306,9 +306,25 @@ export default function ListScreen() {
       {selectedTab === 'achievements' ? (
         <FlatList
           key="achievements-list"
-          data={filteredAchievements}
-          keyExtractor={(item) => item.id}
-          renderItem={renderAchievementItem}
+          data={grouped}
+          keyExtractor={(item, index) => `group-${index}`}
+          renderItem={({ item: group }) => (
+            <View>
+              {/* Category header */}
+              <View style={styles.categoryGroupHeader}>
+                <Text style={styles.categoryGroupEmoji}>{group.category.emoji}</Text>
+                <Text style={styles.categoryGroupName}>{group.category.name}</Text>
+                <View style={[styles.categoryGroupBadge, { backgroundColor: group.category.color }]}>
+                  <Text style={styles.categoryGroupBadgeText}>{group.items.length}</Text>
+                </View>
+              </View>
+              {/* Achievement items in this category */}
+              {group.items.map((item, index) => {
+                const achievementIndex = filteredAchievements.findIndex((a) => a.id === item.id);
+                return renderAchievementItem({ item, index: achievementIndex });
+              })}
+            </View>
+          )}
           scrollEnabled={true}
           contentContainerStyle={[
             styles.listContent,
@@ -811,6 +827,38 @@ const styles = StyleSheet.create({
   },
   categoryBadgeTextActive: {
     color: '#0A0E1A',
+  },
+  categoryGroupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1E2A3A',
+    marginTop: 8,
+  },
+  categoryGroupEmoji: {
+    fontSize: 18,
+  },
+  categoryGroupName: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#E2E8F0',
+  },
+  categoryGroupBadge: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    minWidth: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryGroupBadgeText: {
+    fontSize: 10,
+    color: '#0A0E1A',
+    fontWeight: '700',
   },
   listContent: {
     paddingHorizontal: 0,
