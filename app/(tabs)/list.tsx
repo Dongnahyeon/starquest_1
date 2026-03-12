@@ -28,6 +28,7 @@ export default function ListScreen() {
   const { achievements, categories, completeAchievement, deleteAchievement, reorderAchievements, updateAchievementTitle } = useAchievementsContext();
   const { lists, deleteList, reorderLists } = useListsContext();
   const [selectedTab, setSelectedTab] = useState<'achievements' | 'lists'>('achievements');
+  const [selectedListCategoryId, setSelectedListCategoryId] = useState<string | null>(null);
   const [justCompleted, setJustCompleted] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
@@ -57,6 +58,11 @@ export default function ListScreen() {
         }))
         .filter((g) => g.items.length > 0)
     : [];
+
+  // Filter lists by category
+  const filteredLists = selectedListCategoryId === null || selectedListCategoryId === 'all'
+    ? lists
+    : lists.filter((list) => list.categoryId === selectedListCategoryId);
 
   const handleComplete = async (achievement: Achievement) => {
     if (Platform.OS !== 'web') {
@@ -353,7 +359,7 @@ export default function ListScreen() {
       ) : (
         <FlatList
           key="lists-grid"
-          data={lists}
+          data={filteredLists}
           keyExtractor={(item) => item.id}
           renderItem={renderListItem}
           scrollEnabled={true}
@@ -393,6 +399,62 @@ export default function ListScreen() {
                   <IconSymbol name="tag.fill" size={18} color="#718096" />
                 </TouchableOpacity>
               </View>
+
+              {/* Category filter for lists */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.categoryScroll}
+                contentContainerStyle={styles.categoryScrollContent}
+              >
+                {/* All option */}
+                <TouchableOpacity
+                  style={[
+                    styles.categoryTab,
+                    (selectedListCategoryId === null || selectedListCategoryId === 'all') && { borderColor: '#F5C842', backgroundColor: '#F5C84220' },
+                  ]}
+                  onPress={() => setSelectedListCategoryId('all')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.categoryEmoji}>⭐</Text>
+                  <Text style={[
+                    styles.categoryName,
+                    (selectedListCategoryId === null || selectedListCategoryId === 'all') && { color: '#F5C842' }
+                  ]}>
+                    전체
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Category options */}
+                {categories && Array.isArray(categories) && categories.map((cat) => {
+                  const catLists = lists.filter((l) => l.categoryId === cat.id);
+                  const isSelected = selectedListCategoryId === cat.id;
+                  return (
+                    <TouchableOpacity
+                      key={cat.id}
+                      style={[
+                        styles.categoryTab,
+                        isSelected && {
+                          borderColor: cat.color,
+                          backgroundColor: `${cat.color}20`,
+                        },
+                      ]}
+                      onPress={() => setSelectedListCategoryId(cat.id)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+                      <Text style={[styles.categoryName, isSelected && { color: cat.color }]}>
+                        {cat.name}
+                      </Text>
+                      {catLists.length > 0 && (
+                        <View style={[styles.categoryBadge, { backgroundColor: cat.color }]}>
+                          <Text style={styles.categoryBadgeText}>{catLists.length}</Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
             </>
           }
           ListEmptyComponent={
@@ -477,7 +539,7 @@ export default function ListScreen() {
                 {categories && Array.isArray(categories) && categories.map((cat) => (
                   <View key={cat.id} style={styles.categoryListItem}>
                     <View style={styles.categoryListItemLeft}>
-                      <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+                      <Text style={styles.categoryListItemEmoji}>{cat.emoji}</Text>
                       <View>
                         <Text style={styles.categoryListItemName}>{cat.name}</Text>
                         <View style={[styles.categoryColorDot, { backgroundColor: cat.color }]} />
@@ -710,12 +772,34 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 8,
   },
-  categoryBadge: {
-    paddingVertical: 6,
+  categoryScrollContent: {
+    gap: 8,
+  },
+  categoryTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
-    borderRadius: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#1E2A3A',
     backgroundColor: '#111827',
-    marginRight: 8,
+    gap: 5,
+  },
+  categoryEmoji: {
+    fontSize: 14,
+  },
+  categoryName: {
+    fontSize: 13,
+    color: '#718096',
+  },
+  categoryBadge: {
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    borderRadius: 8,
+    minWidth: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   categoryBadgeActive: {
     backgroundColor: '#F5C842',
@@ -1039,7 +1123,7 @@ const styles = StyleSheet.create({
     gap: 12,
     flex: 1,
   },
-  categoryEmoji: {
+  categoryListItemEmoji: {
     fontSize: 24,
   },
   categoryListItemName: {
