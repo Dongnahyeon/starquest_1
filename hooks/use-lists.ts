@@ -222,8 +222,8 @@ export function useLists() {
   const hideListItem = useCallback(
     async (listId: string, itemId: string) => {
       console.log('[LOG] hideListItem 함수 호출:', listId, itemId);
-      setLists((prev) =>
-        prev.map((list) => {
+      setLists((prev) => {
+        const updated = prev.map((list) => {
           if (list.id === listId) {
             const itemToHide = list.items.find((i) => i.id === itemId);
             console.log('[LOG] 숨길 항목:', itemToHide?.title);
@@ -236,8 +236,12 @@ export function useLists() {
             };
           }
           return list;
-        })
-      );
+        });
+        AsyncStorage.setItem('lists', JSON.stringify(updated)).catch((error) => {
+          console.error('[LOG] AsyncStorage 저장 실패:', error);
+        });
+        return updated;
+      });
     },
     []
   );
