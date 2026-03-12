@@ -485,6 +485,13 @@ export default function ListDetailScreen() {
               >
                 <IconSymbol name="pencil" size={16} color="#4ECDC4" />
               </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleHideItem(item.id, item.title)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={{ marginLeft: 8 }}
+              >
+                <IconSymbol name="trash.fill" size={16} color="#FF6B6B" />
+              </TouchableOpacity>
             </View>
           </TouchableOpacity>
         )}
