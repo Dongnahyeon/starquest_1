@@ -139,8 +139,9 @@ export default function DetailScreen() {
   return (
     <View style={styles.root}>
       {/* Background */}
-      <View style={styles.background} pointerEvents="none">
+      <View style={[styles.background, { zIndex: -1 }]} pointerEvents="none">
         <Animated.View
+          pointerEvents="none"
           style={[
             styles.bgGlow,
             {
@@ -152,12 +153,12 @@ export default function DetailScreen() {
       </View>
 
       <ScrollView
-        style={styles.scrollView}
+        style={[styles.scrollView, { zIndex: 1 }]}
         contentContainerStyle={[styles.container, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 40 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { zIndex: 2 }]}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <IconSymbol name="arrow.left" size={24} color="#E2E8F0" />
           </TouchableOpacity>
