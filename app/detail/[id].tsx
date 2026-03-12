@@ -164,33 +164,6 @@ export default function DetailScreen() {
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <IconSymbol name="arrow.left" size={24} color="#E2E8F0" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.deleteButton} onPress={() => {
-            Alert.alert(
-              '별 숨기기',
-              `"${achievement?.title}" 별을 숨길까요?`,
-              [
-                { text: '취소', style: 'cancel' },
-                {
-                  text: '숨기기',
-                  style: 'destructive',
-                  onPress: async () => {
-                    if (achievement) {
-                      try {
-                        await archiveAchievement(achievement.id);
-                        await new Promise(resolve => setTimeout(resolve, 200));
-                        router.back();
-                      } catch (error) {
-                        console.error('Archive error:', error);
-                        Alert.alert('오류', '별 숨기기에 실패했습니다.');
-                      }
-                    }
-                  },
-                },
-              ]
-            );
-          }}>
-            <IconSymbol name="eye.slash" size={20} color="#A0AEC0" />
-          </TouchableOpacity>
         </View>
 
         {/* Category badge */}

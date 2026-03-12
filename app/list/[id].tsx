@@ -136,6 +136,7 @@ export default function ListDetailScreen() {
 
   const handleHideItem = (itemId: string, itemTitle: string) => {
     console.log('[DEBUG] handleHideItem 호출:', itemId, itemTitle);
+    console.log('[DEBUG] Alert.alert 호출 전');
     Alert.alert('항목 숨기기', `"${itemTitle}" 항목을 숨길까요?`, [
       { text: '취소', style: 'cancel' },
       {
@@ -483,13 +484,6 @@ export default function ListDetailScreen() {
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <IconSymbol name="pencil" size={16} color="#4ECDC4" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => handleHideItem(item.id, item.title)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                style={{ marginLeft: 12 }}
-              >
-                <IconSymbol name="trash" size={16} color="#FF6B6B" />
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
