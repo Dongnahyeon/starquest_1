@@ -5,7 +5,7 @@ import { List } from '@/types/list';
 interface ListsContextType {
   lists: List[];
   isLoading: boolean;
-  createList: (title: string) => Promise<List>;
+  createList: (title: string, categoryId?: string) => Promise<List>;
   addListItem: (listId: string, itemTitle: string) => Promise<any>;
   toggleListItem: (listId: string, itemId: string, completionNote?: string) => Promise<void>;
   deleteListItem: (listId: string, itemId: string) => Promise<void>;
