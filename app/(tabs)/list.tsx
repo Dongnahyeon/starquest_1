@@ -47,22 +47,23 @@ export default function ListScreen() {
   const [colorPickerVisible, setColorPickerVisible] = useState(false);
   const { addCategory, updateCategory, deleteCategory } = useAchievementsContext();
 
-  const filteredAchievements = achievements && Array.isArray(achievements) ? achievements : [];
-
-  // Group by category
-  const grouped = (categories && Array.isArray(categories) && filteredAchievements && Array.isArray(filteredAchievements))
-    ? categories
-        .map((cat) => ({
-          category: cat,
-          items: filteredAchievements.filter((a) => a.categoryId === cat.id),
-        }))
-        .filter((g) => g.items.length > 0)
-    : [];
+  const filteredAchievements = selectedListCategoryId === null || selectedListCategoryId === 'all'
+    ? (achievements && Array.isArray(achievements) ? achievements : [])
+    : (achievements && Array.isArray(achievements) ? achievements.filter((a) => a.categoryId === selectedListCategoryId) : []);
 
   // Filter lists by category
   const filteredLists = selectedListCategoryId === null || selectedListCategoryId === 'all'
     ? lists
     : lists.filter((list) => list.categoryId === selectedListCategoryId);
+
+  // Calculate category counts for achievements
+  const achievementCategoryCounts = (categories && Array.isArray(categories)) ?
+    categories.reduce((acc, cat) => {
+      const count = (achievements && Array.isArray(achievements)) ?
+        achievements.filter((a) => a.categoryId === cat.id).length : 0;
+      acc[cat.id] = count;
+      return acc;
+    }, {} as Record<string, number>) : {};
 
   const handleComplete = async (achievement: Achievement) => {
     if (Platform.OS !== 'web') {
@@ -320,25 +321,9 @@ export default function ListScreen() {
       {selectedTab === 'achievements' ? (
         <FlatList
           key="achievements-list"
-          data={grouped}
-          keyExtractor={(item, index) => `group-${index}`}
-          renderItem={({ item: group }) => (
-            <View>
-              {/* Category header */}
-              <View style={styles.categoryGroupHeader}>
-                <Text style={styles.categoryGroupEmoji}>{group.category.emoji}</Text>
-                <Text style={styles.categoryGroupName}>{group.category.name}</Text>
-                <View style={[styles.categoryGroupBadge, { backgroundColor: group.category.color }]}>
-                  <Text style={styles.categoryGroupBadgeText}>{group.items.length}</Text>
-                </View>
-              </View>
-              {/* Achievement items in this category */}
-              {group.items.map((item, index) => {
-                const achievementIndex = filteredAchievements.findIndex((a) => a.id === item.id);
-                return renderAchievementItem({ item, index: achievementIndex });
-              })}
-            </View>
-          )}
+          data={filteredAchievements}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => renderAchievementItem({ item, index })}
           scrollEnabled={true}
           contentContainerStyle={[
             styles.listContent,
@@ -375,7 +360,35 @@ export default function ListScreen() {
                 </TouchableOpacity>
               </View>
 
-
+              {/* Category filter */}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryFilterContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.categoryBadge,
+                    (selectedListCategoryId === null || selectedListCategoryId === 'all') && styles.categoryBadgeActive,
+                  ]}
+                  onPress={() => setSelectedListCategoryId(null)}
+                >
+                  <Text style={[styles.categoryBadgeText, (selectedListCategoryId === null || selectedListCategoryId === 'all') && styles.categoryBadgeTextActive]}>
+                    전체
+                  </Text>
+                </TouchableOpacity>
+                {categories && Array.isArray(categories) && categories.map((cat) => (
+                  <TouchableOpacity
+                    key={cat.id}
+                    style={[
+                      styles.categoryBadge,
+                      { backgroundColor: selectedListCategoryId === cat.id ? cat.color : 'transparent' },
+                      selectedListCategoryId === cat.id && styles.categoryBadgeActive,
+                    ]}
+                    onPress={() => setSelectedListCategoryId(cat.id)}
+                  >
+                    <Text style={[styles.categoryBadgeText, selectedListCategoryId === cat.id && styles.categoryBadgeTextActive]}>
+                      {cat.emoji} {achievementCategoryCounts[cat.id] || 0}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             </>
           }
           ListEmptyComponent={
@@ -796,6 +809,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#111827',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  categoryFilterContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
   },
   categoryScroll: {
     paddingHorizontal: 16,
