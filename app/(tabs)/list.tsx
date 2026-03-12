@@ -482,55 +482,6 @@ export default function ListScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* Category filter for achievements */}
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.categoryFilterContainer}
-              >
-                {/* All option */}
-                <TouchableOpacity
-                  style={[
-                    styles.categoryBadge,
-                    (selectedAchievementCategoryId === null) && styles.categoryBadgeActive,
-                  ]}
-                  onPress={() => setSelectedAchievementCategoryId(null)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[
-                    styles.categoryBadgeText,
-                    (selectedAchievementCategoryId === null) && styles.categoryBadgeTextActive
-                  ]}>
-                    전체
-                  </Text>
-                </TouchableOpacity>
-
-                {/* Category options */}
-                {categories && Array.isArray(categories) && categories.map((cat) => {
-                  const catAchievements = achievements && Array.isArray(achievements) 
-                    ? achievements.filter((a) => a.categoryId === cat.id)
-                    : [];
-                  const isSelected = selectedAchievementCategoryId === cat.id;
-                  return (
-                    <TouchableOpacity
-                      key={cat.id}
-                      style={[
-                        styles.categoryBadge,
-                        isSelected && {
-                          backgroundColor: cat.color,
-                          borderColor: cat.color,
-                        },
-                      ]}
-                      onPress={() => setSelectedAchievementCategoryId(cat.id)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.categoryBadgeText, isSelected && styles.categoryBadgeTextActive]}>
-                        {cat.emoji} {cat.name}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
             </>
           }
           ListEmptyComponent={
