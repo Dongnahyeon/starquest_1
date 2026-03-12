@@ -12,7 +12,6 @@ import {
   TouchableOpacity,
   View,
   Dimensions,
-  PanResponder,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -29,7 +28,7 @@ export default function ListDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { getCategoryById } = useAchievementsContext();
-  const { getListById, addListItem, toggleListItem, deleteListItem, hideListItem, deleteList, reorderListItems, updateListItemTitle, updateListItemNote, updateListTitle } = useListsContext();
+  const { getListById, addListItem, toggleListItem, deleteListItem, hideListItem, deleteList, updateListItemTitle, updateListItemNote, updateListTitle } = useListsContext();
 
   const list = getListById(id);
   const category = list ? getCategoryById(list.categoryId) : null;
@@ -43,7 +42,7 @@ export default function ListDetailScreen() {
   const [showItemDetailModal, setShowItemDetailModal] = useState(false);
   const [selectedItemNote, setSelectedItemNote] = useState('');
   const [selectedItemTitle, setSelectedItemTitle] = useState('');
-  const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
+
   const [showEditItemModal, setShowEditItemModal] = useState(false);
   const [editItemText, setEditItemText] = useState('');
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
@@ -162,31 +161,7 @@ export default function ListDetailScreen() {
     ]);
   };
 
-  const handleStartDrag = (itemId: string) => {
-    setDraggedItemId(itemId);
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-  };
 
-  const handleDropItem = (targetItemId: string) => {
-    if (!draggedItemId || !list || draggedItemId === targetItemId) {
-      setDraggedItemId(null);
-      return;
-    }
-
-    const draggedIndex = list.items.findIndex(i => i.id === draggedItemId);
-    const targetIndex = list.items.findIndex(i => i.id === targetItemId);
-
-    if (draggedIndex !== -1 && targetIndex !== -1) {
-      reorderListItems(list.id, draggedIndex, targetIndex);
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-    }
-
-    setDraggedItemId(null);
-  };
 
   const handleEditItem = (itemId: string, currentTitle: string) => {
     setEditingItemId(itemId);
@@ -428,17 +403,8 @@ export default function ListDetailScreen() {
           </>
         }
         renderItem={({ item, index }) => (
-          <TouchableOpacity
-            style={[
-              styles.itemRow,
-              draggedItemId === item.id && styles.itemRowDragging,
-            ]}
-            onPress={() => {
-              if (draggedItemId) {
-                handleDropItem(item.id);
-              }
-            }}
-            activeOpacity={1}
+          <View
+            style={styles.itemRow}
           >
             <TouchableOpacity
               style={styles.checkboxContainer}
@@ -496,7 +462,6 @@ export default function ListDetailScreen() {
                 <IconSymbol name="pencil" size={16} color="#4ECDC4" />
               </TouchableOpacity>
               <TouchableOpacity
-                style={{ pointerEvents: 'auto' }}
                 onPress={() => {
                   Alert.alert(
                     '항목 삭제',
@@ -520,7 +485,7 @@ export default function ListDetailScreen() {
                 <IconSymbol name="trash" size={16} color="#EF4444" />
               </TouchableOpacity>
             </View>
-          </TouchableOpacity>
+          </View>
         )}
         ListEmptyComponent={
           <View style={styles.emptyState}>
@@ -969,11 +934,7 @@ const styles = StyleSheet.create({
     borderColor: '#1E2A3A',
     gap: 10,
   },
-  itemRowDragging: {
-    backgroundColor: '#1E2A3A',
-    borderColor: '#4ECDC4',
-    opacity: 0.8,
-  },
+
   checkboxContainer: {
     padding: 4,
   },
