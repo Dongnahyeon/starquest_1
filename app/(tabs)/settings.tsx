@@ -26,9 +26,12 @@ export default function SettingsScreen() {
   const systemColorScheme = useColorScheme();
   
   const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(colorScheme === 'dark');
   const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(false);
   const [dailyReminderEnabled, setDailyReminderEnabled] = useState(false);
+  const { importData } = useAchievementsContext();
+  const { importLists } = useListsContext();
 
   // 설정 로드
   useEffect(() => {
@@ -96,6 +99,55 @@ export default function SettingsScreen() {
       Alert.alert('오류', '데이터 내보내기에 실패했습니다.');
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleImportData = async () => {
+    try {
+      setIsImporting(true);
+
+      if (typeof window !== 'undefined') {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = async (e: any) => {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = async (event: any) => {
+            try {
+              const importedData = JSON.parse(event.target.result);
+              
+              // achievements와 lists 가져오기
+              if (importedData.achievements && Array.isArray(importedData.achievements)) {
+                await importData({
+                  achievements: importedData.achievements,
+                  categories: importedData.achievements.length > 0 ? importedData.categories || [] : [],
+                });
+              }
+              
+              if (importedData.lists && Array.isArray(importedData.lists)) {
+                await importLists(importedData.lists);
+              }
+
+              Alert.alert('성공', '데이터가 가져와졌습니다.');
+              router.push('/');
+            } catch (error) {
+              console.error('Parse error:', error);
+              Alert.alert('오류', '파일 형식이 올바르지 않습니다.');
+            } finally {
+              setIsImporting(false);
+            }
+          };
+          reader.readAsText(file);
+        };
+        input.click();
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      Alert.alert('오류', '데이터 가져오기에 실패했습니다.');
+      setIsImporting(false);
     }
   };
 
@@ -202,7 +254,16 @@ export default function SettingsScreen() {
               disabled={isExporting}
             >
               <Text style={styles.buttonText}>
-                {isExporting ? '내보내는 중...' : '데이터 내보내기'}
+                {isExporting ? '내보내는 중...' : '📥 데이터 내보내기'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.buttonPrimary, { opacity: isImporting ? 0.6 : 1, marginTop: 8 }]}
+              onPress={handleImportData}
+              disabled={isImporting}
+            >
+              <Text style={styles.buttonText}>
+                {isImporting ? '가져오는 중...' : '📤 데이터 가져오기'}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity

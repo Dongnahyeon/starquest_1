@@ -257,12 +257,32 @@ export function useLists() {
     async (fromIndex: number, toIndex: number) => {
       setLists((prev) => {
         const newLists = [...prev];
-        const [movedItem] = newLists.splice(fromIndex, 1);
-        newLists.splice(toIndex, 0, movedItem);
+        const [movedList] = newLists.splice(fromIndex, 1);
+        newLists.splice(toIndex, 0, movedList);
         return newLists;
       });
     },
     []
+  );
+
+  const importLists = useCallback(
+    async (importedLists: List[]) => {
+      try {
+        // 기존 리스트와 병합 (새로운 리스트 추가, 기존 리스트 유지)
+        const mergedLists = [
+          ...lists,
+          ...importedLists.filter(
+            (imp) => !lists.some((existing) => existing.id === imp.id)
+          ),
+        ];
+        setLists(mergedLists);
+        return true;
+      } catch (error) {
+        console.error('Import lists failed:', error);
+        return false;
+      }
+    },
+    [lists]
   );
 
   return {
@@ -279,5 +299,6 @@ export function useLists() {
     updateListTitle,
     reorderLists,
     reload: loadLists,
+    importLists,
   };
 }

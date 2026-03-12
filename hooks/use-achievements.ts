@@ -209,12 +209,37 @@ export function useAchievements() {
     },
     [data.categories]
   );
-
   const getCategoryByName = useCallback(
-    (name: string) => {
-      return data.categories.find((c) => c.name === name);
-    },
+    (name: string) => data.categories.find((c) => c.name === name),
     [data.categories]
+  );
+
+  const importData = useCallback(
+    async (importedData: AppData) => {
+      try {
+        // 기존 데이터와 병합 (새로운 데이터 추가, 기존 데이터 유지)
+        const mergedData: AppData = {
+          achievements: [
+            ...data.achievements,
+            ...importedData.achievements.filter(
+              (imp) => !data.achievements.some((existing) => existing.id === imp.id)
+            ),
+          ],
+          categories: [
+            ...data.categories,
+            ...importedData.categories.filter(
+              (imp) => !data.categories.some((existing) => existing.id === imp.id)
+            ),
+          ],
+        };
+        setData(mergedData);
+        return true;
+      } catch (error) {
+        console.error('Import failed:', error);
+        return false;
+      }
+    },
+    [data.achievements, data.categories]
   );
 
   const updateCategory = useCallback(
@@ -262,5 +287,6 @@ export function useAchievements() {
     getAchievementById,
     getCategoryById,
     getCategoryByName,
+    importData,
   };
 }

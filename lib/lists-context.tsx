@@ -18,6 +18,7 @@ interface ListsContextType {
   reorderLists: (fromIndex: number, toIndex: number) => Promise<void>;
   getListById: (listId: string) => List | undefined;
   getListsByCategory: (categoryId: string) => List[];
+  importLists: (importedLists: List[]) => Promise<boolean>;
 }
 
 const ListsContext = createContext<ListsContextType | undefined>(undefined);
@@ -42,6 +43,7 @@ export function ListsProvider({ children }: { children: React.ReactNode }) {
     reorderLists: listsHook.reorderLists,
     getListById: (listId: string) => listsHook.lists.find((l) => l.id === listId),
     getListsByCategory: (categoryId: string) => listsHook.lists.filter((l) => l.categoryId === categoryId),
+    importLists: listsHook.importLists,
   };
 
   return (
