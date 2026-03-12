@@ -428,20 +428,6 @@ export default function ListDetailScreen() {
               styles.itemRow,
               draggedItemId === item.id && styles.itemRowDragging,
             ]}
-            onLongPress={() => {
-              Alert.alert(
-                '항목 삭제',
-                `\"${item.title}\" 항목을 삭제할까요?`,
-                [
-                  { text: '취소', style: 'cancel' },
-                  {
-                    text: '삭제',
-                    style: 'destructive',
-                    onPress: () => handleDeleteItem(item.id, item.title),
-                  },
-                ]
-              );
-            }}
             onPress={() => draggedItemId && handleDropItem(item.id)}
             activeOpacity={1}
           >
@@ -493,6 +479,13 @@ export default function ListDetailScreen() {
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <IconSymbol name="pencil" size={16} color="#4ECDC4" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleDeleteItem(item.id, item.title)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={{ marginLeft: 12 }}
+              >
+                <IconSymbol name="trash" size={16} color="#FF6B6B" />
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
