@@ -17,14 +17,15 @@ import { StarryIntro } from '@/components/StarryIntro';
 import { ConstellationView } from '@/components/ConstellationView';
 import { useAchievementsContext } from '@/lib/achievements-context';
 import { useListsContext } from '@/lib/lists-context';
-import { Category } from '@/types/achievement';
+import { Category, Achievement } from '@/types/achievement';
+import { Alert } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { data, totalCompletions, totalAchievements } = useAchievementsContext();
+  const { data, totalCompletions, totalAchievements, deleteAchievement } = useAchievementsContext();
   const achievements = (data && data.achievements && Array.isArray(data.achievements)) ? data.achievements : [];
   const categories = (data && data.categories && Array.isArray(data.categories)) ? data.categories : [];
   const { lists } = useListsContext();
@@ -166,6 +167,24 @@ export default function HomeScreen() {
               <ConstellationView
                 category={currentCategory}
                 achievements={currentAchievements}
+                onStarLongPress={(achievement: Achievement) => {
+                  Alert.alert(
+                    '별 삭제',
+                    `"${achievement.title}"을(를) 삭제하시겠습니까?`,
+                    [
+                      {
+                        text: '취소',
+                        onPress: () => {},
+                        style: 'cancel',
+                      },
+                      {
+                        text: '삭제',
+                        onPress: () => deleteAchievement(achievement.id),
+                        style: 'destructive',
+                      },
+                    ]
+                  );
+                }}
               />
             </>
           )}

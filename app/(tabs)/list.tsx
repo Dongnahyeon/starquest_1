@@ -16,11 +16,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { StarIcon } from '@/components/StarIcon';
+import { ScreenContainer } from '@/components/screen-container';
 import { useAchievementsContext } from '@/lib/achievements-context';
 import { useListsContext } from '@/lib/lists-context';
 import { Achievement, Category, getStarDynamicName } from '@/types/achievement';
-import { ScreenContainer } from '@/components/screen-container';
+import { StarIcon } from '@/components/StarIcon';
 
 export default function ListScreen() {
   const router = useRouter();
@@ -329,6 +329,29 @@ export default function ListScreen() {
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <IconSymbol name="chevron.down" size={16} color={index === lists.length - 1 ? '#475569' : '#718096'} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              Alert.alert(
+                '리스트 삭제',
+                `"${item.title}"을(를) 삭제하시겠습니까?`,
+                [
+                  {
+                    text: '취소',
+                    onPress: () => {},
+                    style: 'cancel',
+                  },
+                  {
+                    text: '삭제',
+                    onPress: () => deleteList(item.id),
+                    style: 'destructive',
+                  },
+                ]
+              );
+            }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <IconSymbol name="trash" size={16} color="#EF4444" />
           </TouchableOpacity>
         </View>
       </View>

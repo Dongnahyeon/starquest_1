@@ -47,9 +47,10 @@ interface ConstellationViewProps {
   category: Category;
   achievements: Achievement[];
   onStarPress?: (achievement: Achievement) => void;
+  onStarLongPress?: (achievement: Achievement) => void;
 }
 
-export function ConstellationView({ category, achievements, onStarPress }: ConstellationViewProps) {
+export function ConstellationView({ category, achievements, onStarPress, onStarLongPress }: ConstellationViewProps) {
   const router = useRouter();
   const positions = useMemo(
     () => generateConstellationPositions(achievements),
@@ -61,6 +62,12 @@ export function ConstellationView({ category, achievements, onStarPress }: Const
       onStarPress(achievement);
     } else {
       router.push(`/detail/${achievement.id}` as any);
+    }
+  };
+
+  const handleStarLongPress = (achievement: Achievement) => {
+    if (onStarLongPress) {
+      onStarLongPress(achievement);
     }
   };
 
@@ -154,7 +161,9 @@ export function ConstellationView({ category, achievements, onStarPress }: Const
             },
           ]}
           onPress={() => handleStarPress(pos.achievement)}
+          onLongPress={() => handleStarLongPress(pos.achievement)}
           activeOpacity={0.7}
+          delayLongPress={500}
         />
       ))}
     </View>
