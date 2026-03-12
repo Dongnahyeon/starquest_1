@@ -221,26 +221,36 @@ export function useLists() {
 
   const hideListItem = useCallback(
     async (listId: string, itemId: string) => {
-      console.log('[LOG] hideListItem 함수 호출:', listId, itemId);
-      setLists((prev) => {
-        const updated = prev.map((list) => {
-          if (list.id === listId) {
-            const itemToHide = list.items.find((i) => i.id === itemId);
-            console.log('[LOG] 숨길 항목:', itemToHide?.title);
-            return {
-              ...list,
-              items: list.items.map((i) =>
-                i.id === itemId ? { ...i, isHidden: true } : i
-              ),
-              updatedAt: new Date().toISOString(),
-            };
-          }
-          return list;
+      return new Promise<void>((resolve, reject) => {
+        console.log('[LOG] hideListItem 함수 호출:', listId, itemId);
+        setLists((prev) => {
+          const updated = prev.map((list) => {
+            if (list.id === listId) {
+              const itemToHide = list.items.find((i) => i.id === itemId);
+              console.log('[LOG] 숨길 항목:', itemToHide?.title);
+              return {
+                ...list,
+                items: list.items.map((i) =>
+                  i.id === itemId ? { ...i, isHidden: true } : i
+                ),
+                updatedAt: new Date().toISOString(),
+              };
+            }
+            return list;
+          });
+          
+          AsyncStorage.setItem('lists', JSON.stringify(updated))
+            .then(() => {
+              console.log('[LOG] AsyncStorage 저장 완료');
+              resolve();
+            })
+            .catch((error) => {
+              console.error('[LOG] AsyncStorage 저장 실패:', error);
+              reject(error);
+            });
+          
+          return updated;
         });
-        AsyncStorage.setItem('lists', JSON.stringify(updated)).catch((error) => {
-          console.error('[LOG] AsyncStorage 저장 실패:', error);
-        });
-        return updated;
       });
     },
     []
