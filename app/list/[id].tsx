@@ -492,6 +492,7 @@ export default function ListDetailScreen() {
                 <IconSymbol name="pencil" size={16} color="#4ECDC4" />
               </TouchableOpacity>
               <TouchableOpacity
+                style={{ pointerEvents: 'auto' }}
                 onPress={() => {
                   Alert.alert(
                     '항목 삭제',
