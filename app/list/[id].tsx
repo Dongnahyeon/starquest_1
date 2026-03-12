@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
   Dimensions,
+  PanResponder,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -48,6 +49,8 @@ export default function ListDetailScreen() {
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [showEditListModal, setShowEditListModal] = useState(false);
   const [editListText, setEditListText] = useState('');
+  const [swipedItemId, setSwipedItemId] = useState<string | null>(null);
+  const swipeAnimations = useRef<{ [key: string]: Animated.Value }>({}).current;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const starScale = useRef(new Animated.Value(1)).current;
@@ -425,7 +428,20 @@ export default function ListDetailScreen() {
               styles.itemRow,
               draggedItemId === item.id && styles.itemRowDragging,
             ]}
-            onLongPress={() => handleStartDrag(item.id)}
+            onLongPress={() => {
+              Alert.alert(
+                '항목 삭제',
+                `\"${item.title}\" 항목을 삭제할까요?`,
+                [
+                  { text: '취소', style: 'cancel' },
+                  {
+                    text: '삭제',
+                    style: 'destructive',
+                    onPress: () => handleDeleteItem(item.id, item.title),
+                  },
+                ]
+              );
+            }}
             onPress={() => draggedItemId && handleDropItem(item.id)}
             activeOpacity={1}
           >
@@ -477,12 +493,6 @@ export default function ListDetailScreen() {
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <IconSymbol name="pencil" size={16} color="#4ECDC4" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => handleDeleteItem(item.id, item.title)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <IconSymbol name="trash" size={16} color="#FC8181" />
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
