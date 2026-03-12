@@ -28,7 +28,7 @@ export default function DetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { getAchievementById, getCategoryById, completeAchievement, uncompleteAchievement, deleteAchievement } =
+  const { getAchievementById, getCategoryById, completeAchievement, uncompleteAchievement, deleteAchievement, archiveAchievement } =
     useAchievementsContext();
 
   const achievement = getAchievementById(id);
@@ -91,6 +91,8 @@ export default function DetailScreen() {
   };
 
   const handleDelete = () => {
+    console.log('[DEBUG] handleDelete 호출됨');
+    console.log('[DEBUG] achievement:', achievement);
     Alert.alert(
       '별 삭제',
       `"${achievement?.title}" 별을 삭제할까요?\n모든 완료 기록이 사라집니다.`,
@@ -162,8 +164,32 @@ export default function DetailScreen() {
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <IconSymbol name="arrow.left" size={24} color="#E2E8F0" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-            <IconSymbol name="trash" size={20} color="#FF6B6B" />
+          <TouchableOpacity style={styles.deleteButton} onPress={() => {
+            Alert.alert(
+              '별 숨기기',
+              `"${achievement?.title}" 별을 숨길까요?`,
+              [
+                { text: '취소', style: 'cancel' },
+                {
+                  text: '숨기기',
+                  style: 'destructive',
+                  onPress: async () => {
+                    if (achievement) {
+                      try {
+                        await archiveAchievement(achievement.id);
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                        router.back();
+                      } catch (error) {
+                        console.error('Archive error:', error);
+                        Alert.alert('오류', '별 숨기기에 실패했습니다.');
+                      }
+                    }
+                  },
+                },
+              ]
+            );
+          }}>
+            <IconSymbol name="eye.slash" size={20} color="#A0AEC0" />
           </TouchableOpacity>
         </View>
 

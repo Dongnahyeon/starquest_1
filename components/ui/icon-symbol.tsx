@@ -44,6 +44,8 @@ const MAPPING = {
   "note.text": "note",
   "chart.bar": "bar-chart",
   "gearshape.fill": "settings",
+  "eye.slash": "visibility-off",
+  "eye": "visibility",
 } as IconMapping;
 
 /**

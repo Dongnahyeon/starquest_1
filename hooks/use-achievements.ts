@@ -133,6 +133,23 @@ export function useAchievements() {
     []
   );
 
+  const archiveAchievement = useCallback(
+    async (id: string) => {
+      console.log('[LOG] archiveAchievement 함수 호출:', id);
+      setData((prev) => {
+        const archivedTitle = prev.achievements.find((a) => a.id === id)?.title || 'Unknown';
+        console.log('[LOG] 숨길 별:', archivedTitle);
+        return {
+          ...prev,
+          achievements: prev.achievements.map((a) =>
+            a.id === id ? { ...a, isArchived: true } : a
+          ),
+        };
+      });
+    },
+    []
+  );
+
   const reorderAchievements = useCallback(
     (fromIndex: number, toIndex: number) => {
       setData((prev) => {
@@ -206,7 +223,7 @@ export function useAchievements() {
   return {
     data,
     loading,
-    achievements: data.achievements,
+    achievements: data.achievements.filter((a) => !a.isArchived),
     categories: data.categories,
     totalCompletions,
     totalAchievements,
@@ -214,6 +231,7 @@ export function useAchievements() {
     completeAchievement,
     uncompleteAchievement,
     deleteAchievement,
+    archiveAchievement,
     reorderAchievements,
     updateAchievementTitle,
     addCategory,

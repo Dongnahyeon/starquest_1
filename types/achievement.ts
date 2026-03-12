@@ -9,6 +9,7 @@ export interface Achievement {
   lastCompletedAt?: string;
   completionHistory: string[]; // ISO date strings
   dynamicName?: string; // 별 색상에 따라 동적으로 변경되는 이름
+  isArchived?: boolean; // 숨김 상태
 }
 
 export interface Category {
