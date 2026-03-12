@@ -11,6 +11,7 @@ export interface ListItem {
   completedAt?: string; // ISO 8601 format
   completionNote?: string; // 완수 시 작성한 메모
   createdAt: string;
+  isHidden?: boolean; // 숨김 상태
 }
 
 /**

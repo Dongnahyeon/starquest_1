@@ -219,6 +219,29 @@ export function useLists() {
     []
   );
 
+  const hideListItem = useCallback(
+    async (listId: string, itemId: string) => {
+      console.log('[LOG] hideListItem 함수 호출:', listId, itemId);
+      setLists((prev) =>
+        prev.map((list) => {
+          if (list.id === listId) {
+            const itemToHide = list.items.find((i) => i.id === itemId);
+            console.log('[LOG] 숨길 항목:', itemToHide?.title);
+            return {
+              ...list,
+              items: list.items.map((i) =>
+                i.id === itemId ? { ...i, isHidden: true } : i
+              ),
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return list;
+        })
+      );
+    },
+    []
+  );
+
   const updateListTitle = useCallback(
     async (listId: string, newTitle: string) => {
       setLists((prev) =>
@@ -243,12 +266,16 @@ export function useLists() {
   );
 
   return {
-    lists,
+    lists: lists.map(list => ({
+      ...list,
+      items: list.items.filter(item => !item.isHidden)
+    })),
     loading,
     addList,
     deleteList,
     addListItem,
     deleteListItem,
+    hideListItem,
     toggleListItem,
     updateListItemTitle,
     updateListItemNote,

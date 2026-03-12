@@ -9,6 +9,7 @@ interface ListsContextType {
   addListItem: (listId: string, itemTitle: string) => Promise<any>;
   toggleListItem: (listId: string, itemId: string, completionNote?: string) => Promise<void>;
   deleteListItem: (listId: string, itemId: string) => Promise<void>;
+  hideListItem: (listId: string, itemId: string) => Promise<void>;
   deleteList: (listId: string) => Promise<void>;
   updateListTitle: (listId: string, newTitle: string) => Promise<void>;
   updateListItemTitle: (listId: string, itemId: string, newTitle: string) => Promise<void>;
@@ -30,6 +31,7 @@ export function ListsProvider({ children }: { children: React.ReactNode }) {
     addListItem: listsHook.addListItem,
     toggleListItem: listsHook.toggleListItem,
     deleteListItem: listsHook.deleteListItem,
+    hideListItem: listsHook.hideListItem,
     deleteList: listsHook.deleteList,
     updateListTitle: listsHook.updateListTitle,
     updateListItemTitle: listsHook.updateListItemTitle,

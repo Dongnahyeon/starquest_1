@@ -29,7 +29,7 @@ export default function ListDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { getCategoryById } = useAchievementsContext();
-  const { getListById, addListItem, toggleListItem, deleteListItem, deleteList, reorderListItems, updateListItemTitle, updateListItemNote, updateListTitle } = useListsContext();
+  const { getListById, addListItem, toggleListItem, deleteListItem, hideListItem, deleteList, reorderListItems, updateListItemTitle, updateListItemNote, updateListTitle } = useListsContext();
 
   const list = getListById(id);
   const category = list ? getCategoryById(list.categoryId) : null;
@@ -134,29 +134,27 @@ export default function ListDetailScreen() {
     }
   };
 
-  const handleDeleteItem = (itemId: string, itemTitle: string) => {
-    console.log('[DEBUG] handleDeleteItem 호출:', itemId, itemTitle);
-    console.log('[DEBUG] list 개체:', list);
-    console.log('[DEBUG] deleteListItem 함수:', typeof deleteListItem);
-    Alert.alert('항목 삭제', `"${itemTitle}" 항목을 삭제할까요?`, [
+  const handleHideItem = (itemId: string, itemTitle: string) => {
+    console.log('[DEBUG] handleHideItem 호출:', itemId, itemTitle);
+    Alert.alert('항목 숨기기', `"${itemTitle}" 항목을 숨길까요?`, [
       { text: '취소', style: 'cancel' },
       {
-        text: '삭제',
+        text: '숨기기',
         style: 'destructive',
         onPress: async () => {
           try {
-            console.log('[DEBUG] 삭제 확인 버튼 클릭:', list?.id, itemId);
+            console.log('[DEBUG] 숨기기 확인 버튼 클릭:', list?.id, itemId);
             if (list) {
-              console.log('[DEBUG] deleteListItem 호출 전');
-              await deleteListItem(list.id, itemId);
-              console.log('[DEBUG] deleteListItem 호출 후');
+              console.log('[DEBUG] hideListItem 호출 전');
+              await hideListItem(list.id, itemId);
+              console.log('[DEBUG] hideListItem 호출 후');
               if (Platform.OS !== 'web') {
                 await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               }
             }
           } catch (error) {
-            console.error('Delete error:', error);
-            Alert.alert('오류', '항목 삭제에 실패했습니다.');
+            console.error('Hide error:', error);
+            Alert.alert('오류', '항목 숨기기에 실패했습니다.');
           }
         },
       },
@@ -487,7 +485,7 @@ export default function ListDetailScreen() {
                 <IconSymbol name="pencil" size={16} color="#4ECDC4" />
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => handleDeleteItem(item.id, item.title)}
+                onPress={() => handleHideItem(item.id, item.title)}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 style={{ marginLeft: 12 }}
               >
