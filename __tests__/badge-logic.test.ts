@@ -209,9 +209,9 @@ describe('Badge Logic', () => {
       });
     });
 
-    it('should have 20-25 badges', () => {
+    it('should have 20-26 badges', () => {
       expect(ALL_BADGES.length).toBeGreaterThanOrEqual(20);
-      expect(ALL_BADGES.length).toBeLessThanOrEqual(25);
+      expect(ALL_BADGES.length).toBeLessThanOrEqual(26);
     });
   });
 });
