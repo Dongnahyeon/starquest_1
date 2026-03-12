@@ -199,8 +199,10 @@ export default function SettingsScreen() {
   return (
     <ScreenContainer className="flex-1" containerClassName="flex-1" style={{ backgroundColor: colors.background }}>
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 80 }}
         style={{ flex: 1, backgroundColor: colors.background }}
+        scrollEnabled={true}
+        nestedScrollEnabled={true}
       >
         <View style={[styles.container, { paddingBottom: insets.bottom + 16, backgroundColor: colors.background }]}>
           {/* 헤더 */}
