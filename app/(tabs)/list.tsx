@@ -194,6 +194,20 @@ export default function ListScreen() {
     const isJustCompleted = justCompleted === item.id;
     const category = (categories && Array.isArray(categories)) ? categories.find((c) => c.id === item.categoryId) : undefined;
     const achievementIndex = (filteredAchievements && Array.isArray(filteredAchievements)) ? filteredAchievements.findIndex((a) => a.id === item.id) : -1;
+    
+    // Calculate star size based on category's achievement count
+    const categoryAchievements = filteredAchievements.filter((a) => a.categoryId === item.categoryId);
+    const achievementCountInCategory = categoryAchievements.length;
+    let starSize = 14; // default
+    if (achievementCountInCategory >= 25) {
+      starSize = 6;
+    } else if (achievementCountInCategory >= 16) {
+      starSize = 8;
+    } else if (achievementCountInCategory >= 10) {
+      starSize = 10;
+    } else if (achievementCountInCategory >= 6) {
+      starSize = 12;
+    }
 
     return (
       <TouchableOpacity
@@ -204,7 +218,7 @@ export default function ListScreen() {
         <View style={styles.achievementLeft}>
           <StarIcon
             completionCount={item.completionCount}
-            size={22}
+            size={starSize}
             animated={isJustCompleted}
           />
         </View>
