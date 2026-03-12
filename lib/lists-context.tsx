@@ -23,7 +23,7 @@ const ListsContext = createContext<ListsContextType | undefined>(undefined);
 
 export function ListsProvider({ children }: { children: React.ReactNode }) {
   const listsHook = useLists();
-  const value = useMemo(() => ({
+  const value = {
     lists: listsHook.lists,
     isLoading: listsHook.loading,
     createList: listsHook.addList,
@@ -40,9 +40,13 @@ export function ListsProvider({ children }: { children: React.ReactNode }) {
     reorderLists: listsHook.reorderLists,
     getListById: (listId: string) => listsHook.lists.find((l) => l.id === listId),
     getListsByCategory: (categoryId: string) => listsHook.lists.filter((l) => l.categoryId === categoryId),
-  }), [listsHook]);
+  };
 
-  return <ListsContext.Provider value={value}>{children}</ListsContext.Provider>;
+  return (
+    <ListsContext.Provider value={value}>
+      {children}
+    </ListsContext.Provider>
+  );
 }
 
 export function useListsContext() {
