@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
   Pressable,
+  Modal,
 } from 'react-native';
 import { useState, useCallback } from 'react';
 import { useRouter } from 'expo-router';
@@ -35,6 +36,16 @@ export default function ListScreen() {
   const [showEditListModal, setShowEditListModal] = useState(false);
   const [editingList, setEditingList] = useState<{ id: string; title: string } | null>(null);
   const [editListText, setEditListText] = useState('');
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [categoryFormData, setCategoryFormData] = useState({
+    name: '',
+    emoji: '🎯',
+    color: '#FF6B6B',
+  });
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [emojiPickerVisible, setEmojiPickerVisible] = useState(false);
+  const [colorPickerVisible, setColorPickerVisible] = useState(false);
+  const { addCategory, updateCategory, deleteCategory } = useAchievementsContext();
 
   const filteredAchievements =
     selectedCategoryId === 'all'
@@ -323,6 +334,13 @@ export default function ListScreen() {
                     리스트
                   </Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.categoryManageButton}
+                  onPress={() => setShowCategoryModal(true)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <IconSymbol name="tag.fill" size={18} color="#718096" />
+                </TouchableOpacity>
               </View>
 
               {/* Category filter */}
@@ -396,6 +414,13 @@ export default function ListScreen() {
                     리스트
                   </Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.categoryManageButton}
+                  onPress={() => setShowCategoryModal(true)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <IconSymbol name="tag.fill" size={18} color="#718096" />
+                </TouchableOpacity>
               </View>
             </>
           }
@@ -453,6 +478,213 @@ export default function ListScreen() {
           </View>
         </View>
       )}
+      
+      {/* Category Management Modal */}
+      <Modal
+        visible={showCategoryModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowCategoryModal(false)}
+      >
+        <View style={styles.categoryModalOverlay}>
+          <View style={styles.categoryModalContent}>
+            {/* Modal Header */}
+            <View style={styles.categoryModalHeader}>
+              <Text style={styles.categoryModalTitle}>
+                {editingCategoryId ? '카테고리 수정' : '새 카테고리'}
+              </Text>
+              <TouchableOpacity onPress={() => setShowCategoryModal(false)}>
+                <IconSymbol name="xmark" size={24} color="#E2E8F0" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Modal Body */}
+            <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+              {/* Category List */}
+              <View style={styles.categoryListSection}>
+                <Text style={styles.sectionTitle}>기존 카테고리</Text>
+                {categories && Array.isArray(categories) && categories.map((cat) => (
+                  <View key={cat.id} style={styles.categoryListItem}>
+                    <View style={styles.categoryListItemLeft}>
+                      <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+                      <View>
+                        <Text style={styles.categoryListItemName}>{cat.name}</Text>
+                        <View style={[styles.categoryColorDot, { backgroundColor: cat.color }]} />
+                      </View>
+                    </View>
+                    <View style={styles.categoryListItemActions}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setCategoryFormData({
+                            name: cat.name,
+                            emoji: cat.emoji,
+                            color: cat.color,
+                          });
+                          setEditingCategoryId(cat.id);
+                        }}
+                      >
+                        <IconSymbol name="pencil" size={18} color="#F5C842" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => {
+                          Alert.alert(
+                            '카테고리 삭제',
+                            `"${cat.name}" 카테고리를 삭제하시겠습니까?`,
+                            [
+                              { text: '취소', style: 'cancel' },
+                              {
+                                text: '삭제',
+                                style: 'destructive',
+                                onPress: () => {
+                                  deleteCategory(cat.id);
+                                },
+                              },
+                            ]
+                          );
+                        }}
+                      >
+                        <IconSymbol name="trash" size={18} color="#EF4444" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </View>
+
+              {/* Form Section */}
+              <View style={styles.formSection}>
+                <Text style={styles.sectionTitle}>
+                  {editingCategoryId ? '카테고리 수정' : '새 카테고리 추가'}
+                </Text>
+
+                {/* Name Input */}
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>이름</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={categoryFormData.name}
+                    onChangeText={(text) =>
+                      setCategoryFormData((prev) => ({ ...prev, name: text }))
+                    }
+                    placeholder="카테고리 이름"
+                    placeholderTextColor="#718096"
+                  />
+                </View>
+
+                {/* Emoji Picker */}
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>이모지</Text>
+                  <TouchableOpacity
+                    style={styles.emojiPickerButton}
+                    onPress={() => setEmojiPickerVisible(!emojiPickerVisible)}
+                  >
+                    <Text style={styles.emojiPickerText}>{categoryFormData.emoji}</Text>
+                    <IconSymbol
+                      name={emojiPickerVisible ? 'chevron.up' : 'chevron.down'}
+                      size={16}
+                      color="#718096"
+                    />
+                  </TouchableOpacity>
+                  {emojiPickerVisible && (
+                    <View style={styles.emojiGrid}>
+                      {['🏃', '📚', '🎮', '🎨', '🎵', '💪', '🧘', '🍎', '🌙', '⚡', '🎯', '🏆', '📝', '🚀', '💡', '🌟', '❤️', '🔥', '💎', '🌈'].map((emoji) => (
+                        <TouchableOpacity
+                          key={emoji}
+                          style={styles.emojiOption}
+                          onPress={() => {
+                            setCategoryFormData((prev) => ({ ...prev, emoji }));
+                            setEmojiPickerVisible(false);
+                          }}
+                        >
+                          <Text style={styles.emojiOptionText}>{emoji}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </View>
+
+                {/* Color Picker */}
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>색상</Text>
+                  <TouchableOpacity
+                    style={styles.colorPickerButton}
+                    onPress={() => setColorPickerVisible(!colorPickerVisible)}
+                  >
+                    <View
+                      style={[styles.colorDot, { backgroundColor: categoryFormData.color }]}
+                    />
+                    <IconSymbol
+                      name={colorPickerVisible ? 'chevron.up' : 'chevron.down'}
+                      size={16}
+                      color="#718096"
+                    />
+                  </TouchableOpacity>
+                  {colorPickerVisible && (
+                    <View style={styles.colorGrid}>
+                      {['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B88B', '#A9DFBF'].map((color) => (
+                        <TouchableOpacity
+                          key={color}
+                          style={[
+                            styles.colorOption,
+                            { backgroundColor: color },
+                            categoryFormData.color === color && styles.colorOptionSelected,
+                          ]}
+                          onPress={() => {
+                            setCategoryFormData((prev) => ({ ...prev, color }));
+                            setColorPickerVisible(false);
+                          }}
+                        />
+                      ))}
+                    </View>
+                  )}
+                </View>
+              </View>
+            </ScrollView>
+
+            {/* Modal Footer */}
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => {
+                  if (!categoryFormData.name.trim()) {
+                    Alert.alert('오류', '카테고리 이름을 입력해주세요.');
+                    return;
+                  }
+                  if (editingCategoryId) {
+                    updateCategory(
+                      editingCategoryId,
+                      categoryFormData.name,
+                      categoryFormData.emoji,
+                      categoryFormData.color
+                    );
+                    setEditingCategoryId(null);
+                  } else {
+                    addCategory(
+                      categoryFormData.name,
+                      categoryFormData.emoji,
+                      categoryFormData.color
+                    );
+                  }
+                  setCategoryFormData({ name: '', emoji: '🎯', color: '#FF6B6B' });
+                }}
+              >
+                <Text style={styles.modalButtonText}>
+                  {editingCategoryId ? '수정 완료' : '카테고리 추가'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonCancel]}
+                onPress={() => {
+                  setShowCategoryModal(false);
+                  setEditingCategoryId(null);
+                  setCategoryFormData({ name: '', emoji: '🎯', color: '#FF6B6B' });
+                }}
+              >
+                <Text style={styles.modalButtonCancelText}>닫기</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -493,6 +725,14 @@ const styles = StyleSheet.create({
   },
   tabTextActive: {
     color: '#F5C842',
+  },
+  categoryManageButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#111827',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   categoryScroll: {
     paddingHorizontal: 16,
@@ -739,5 +979,199 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: '#0A0E1A',
+  },
+  categoryModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  categoryModalContent: {
+    backgroundColor: '#0A0E1A',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '90%',
+    flexDirection: 'column',
+  },
+  categoryModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1E2A3A',
+  },
+  categoryModalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#E2E8F0',
+  },
+  modalBody: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#1E2A3A',
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    backgroundColor: '#F5C842',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0A0E1A',
+  },
+  modalButtonCancel: {
+    backgroundColor: '#111827',
+    borderWidth: 1,
+    borderColor: '#1E2A3A',
+  },
+  modalButtonCancelText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#E2E8F0',
+  },
+  categoryListSection: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#E2E8F0',
+    marginBottom: 12,
+  },
+  categoryListItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    backgroundColor: '#111827',
+    borderRadius: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#1E2A3A',
+  },
+  categoryListItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  categoryEmoji: {
+    fontSize: 24,
+  },
+  categoryListItemName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#E2E8F0',
+    marginBottom: 4,
+  },
+  categoryColorDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  categoryListItemActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  formSection: {
+    marginBottom: 24,
+  },
+  formGroup: {
+    marginBottom: 16,
+  },
+  formLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#E2E8F0',
+    marginBottom: 8,
+  },
+  textInput: {
+    backgroundColor: '#111827',
+    borderWidth: 1,
+    borderColor: '#1E2A3A',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: '#E2E8F0',
+    fontSize: 14,
+  },
+  emojiPickerButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#111827',
+    borderWidth: 1,
+    borderColor: '#1E2A3A',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  emojiPickerText: {
+    fontSize: 24,
+  },
+  emojiGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+    backgroundColor: '#111827',
+    borderRadius: 8,
+    padding: 8,
+  },
+  emojiOption: {
+    width: '20%',
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emojiOptionText: {
+    fontSize: 24,
+  },
+  colorPickerButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#111827',
+    borderWidth: 1,
+    borderColor: '#1E2A3A',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  colorDot: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+  },
+  colorGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+    backgroundColor: '#111827',
+    borderRadius: 8,
+    padding: 8,
+  },
+  colorOption: {
+    width: '20%',
+    aspectRatio: 1,
+    borderRadius: 12,
+  },
+  colorOptionSelected: {
+    borderWidth: 3,
+    borderColor: '#E2E8F0',
   },
 });
