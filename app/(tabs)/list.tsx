@@ -378,13 +378,12 @@ export default function ListScreen() {
                     key={cat.id}
                     style={[
                       styles.categoryBadge,
-                      { backgroundColor: selectedListCategoryId === cat.id ? cat.color : 'transparent' },
-                      selectedListCategoryId === cat.id && styles.categoryBadgeActive,
+                      selectedListCategoryId === cat.id && { backgroundColor: cat.color, borderColor: cat.color },
                     ]}
                     onPress={() => setSelectedListCategoryId(cat.id)}
                   >
                     <Text style={[styles.categoryBadgeText, selectedListCategoryId === cat.id && styles.categoryBadgeTextActive]}>
-                      {cat.emoji} {achievementCategoryCounts[cat.id] || 0}
+                      {cat.emoji} {cat.name}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -453,16 +452,15 @@ export default function ListScreen() {
                 {/* All option */}
                 <TouchableOpacity
                   style={[
-                    styles.categoryTab,
-                    (selectedListCategoryId === null || selectedListCategoryId === 'all') && { borderColor: '#F5C842', backgroundColor: '#F5C84220' },
+                    styles.categoryBadge,
+                    (selectedListCategoryId === null || selectedListCategoryId === 'all') && { backgroundColor: '#F5C842', borderColor: '#F5C842' },
                   ]}
                   onPress={() => setSelectedListCategoryId('all')}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.categoryEmoji}>⭐</Text>
                   <Text style={[
-                    styles.categoryName,
-                    (selectedListCategoryId === null || selectedListCategoryId === 'all') && { color: '#F5C842' }
+                    styles.categoryBadgeText,
+                    (selectedListCategoryId === null || selectedListCategoryId === 'all') && styles.categoryBadgeTextActive
                   ]}>
                     전체
                   </Text>
@@ -470,30 +468,23 @@ export default function ListScreen() {
 
                 {/* Category options */}
                 {categories && Array.isArray(categories) && categories.map((cat) => {
-                  const catLists = lists.filter((l) => l.categoryId === cat.id);
                   const isSelected = selectedListCategoryId === cat.id;
                   return (
                     <TouchableOpacity
                       key={cat.id}
                       style={[
-                        styles.categoryTab,
+                        styles.categoryBadge,
                         isSelected && {
+                          backgroundColor: cat.color,
                           borderColor: cat.color,
-                          backgroundColor: `${cat.color}20`,
                         },
                       ]}
                       onPress={() => setSelectedListCategoryId(cat.id)}
                       activeOpacity={0.7}
                     >
-                      <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
-                      <Text style={[styles.categoryName, isSelected && { color: cat.color }]}>
-                        {cat.name}
+                      <Text style={[styles.categoryBadgeText, isSelected && styles.categoryBadgeTextActive]}>
+                        {cat.emoji} {cat.name}
                       </Text>
-                      {catLists.length > 0 && (
-                        <View style={[styles.categoryBadge, { backgroundColor: cat.color }]}>
-                          <Text style={styles.categoryBadgeText}>{catLists.length}</Text>
-                        </View>
-                      )}
                     </TouchableOpacity>
                   );
                 })}
@@ -842,20 +833,24 @@ const styles = StyleSheet.create({
     color: '#718096',
   },
   categoryBadge: {
-    paddingVertical: 4,
-    paddingHorizontal: 6,
-    borderRadius: 8,
-    minWidth: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 24,
+    minWidth: 80,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#1E2A3A',
+    backgroundColor: '#111827',
   },
   categoryBadgeActive: {
     backgroundColor: '#F5C842',
+    borderColor: '#F5C842',
   },
   categoryBadgeText: {
-    fontSize: 10,
-    color: '#0A0E1A',
-    fontWeight: '700',
+    fontSize: 14,
+    color: '#718096',
+    fontWeight: '600',
   },
   categoryBadgeTextActive: {
     color: '#0A0E1A',

@@ -137,21 +137,15 @@ export default function HomeScreen() {
               <TouchableOpacity
                 key={cat.id}
                 style={[
-                  styles.categoryTab,
-                  isSelected && { borderColor: cat.color, backgroundColor: `${cat.color}20` },
+                  styles.categoryBadgeButton,
+                  isSelected && { backgroundColor: cat.color, borderColor: cat.color },
                 ]}
                 onPress={() => setSelectedCategoryId(cat.id)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
-                <Text style={[styles.categoryName, isSelected && { color: cat.color }]}>
-                  {cat.name}
+                <Text style={[styles.categoryBadgeButtonText, isSelected && styles.categoryBadgeButtonTextActive]}>
+                  {cat.emoji} {cat.name}
                 </Text>
-                {catAchievements.length > 0 && (
-                  <View style={[styles.categoryBadge, { backgroundColor: cat.color }]}>
-                    <Text style={styles.categoryBadgeText}>{catAchievements.length}</Text>
-                  </View>
-                )}
               </TouchableOpacity>
             );
           })}
@@ -373,6 +367,24 @@ const styles = StyleSheet.create({
   categoryBadgeText: {
     fontSize: 11,
     fontWeight: '700',
+    color: '#0A0E1A',
+  },
+  categoryBadgeButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: '#1E2A3A',
+    backgroundColor: '#111827',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryBadgeButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#718096',
+  },
+  categoryBadgeButtonTextActive: {
     color: '#0A0E1A',
   },
   constellationContainer: {
