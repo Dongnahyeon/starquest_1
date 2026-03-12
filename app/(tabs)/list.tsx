@@ -28,7 +28,7 @@ export default function ListScreen() {
   const { achievements, categories, completeAchievement, deleteAchievement, reorderAchievements, updateAchievementTitle } = useAchievementsContext();
   const { lists, deleteList, reorderLists } = useListsContext();
   const [selectedTab, setSelectedTab] = useState<'achievements' | 'lists'>('achievements');
-  const [selectedListCategoryId, setSelectedListCategoryId] = useState<string | null>(null);
+
   const [justCompleted, setJustCompleted] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
@@ -47,14 +47,16 @@ export default function ListScreen() {
   const [colorPickerVisible, setColorPickerVisible] = useState(false);
   const { addCategory, updateCategory, deleteCategory } = useAchievementsContext();
 
-  const filteredAchievements = selectedListCategoryId === null || selectedListCategoryId === 'all'
-    ? (achievements && Array.isArray(achievements) ? achievements : [])
-    : (achievements && Array.isArray(achievements) ? achievements.filter((a) => a.categoryId === selectedListCategoryId) : []);
+  const filteredAchievements = achievements && Array.isArray(achievements) ? achievements : [];
 
-  // Filter lists by category
-  const filteredLists = selectedListCategoryId === null || selectedListCategoryId === 'all'
-    ? lists
-    : lists.filter((list) => list.categoryId === selectedListCategoryId);
+  // Sort lists by creation date (newest first)
+  const filteredLists = lists && Array.isArray(lists) 
+    ? [...lists].sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA; // 최신순 정렬
+      })
+    : [];
 
   // Calculate category counts for achievements
   const achievementCategoryCounts = (categories && Array.isArray(categories)) ?
@@ -360,34 +362,7 @@ export default function ListScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* Category filter */}
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryFilterContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.categoryBadge,
-                    (selectedListCategoryId === null || selectedListCategoryId === 'all') && styles.categoryBadgeActive,
-                  ]}
-                  onPress={() => setSelectedListCategoryId(null)}
-                >
-                  <Text style={[styles.categoryBadgeText, (selectedListCategoryId === null || selectedListCategoryId === 'all') && styles.categoryBadgeTextActive]}>
-                    전체
-                  </Text>
-                </TouchableOpacity>
-                {categories && Array.isArray(categories) && categories.map((cat) => (
-                  <TouchableOpacity
-                    key={cat.id}
-                    style={[
-                      styles.categoryBadge,
-                      selectedListCategoryId === cat.id && { backgroundColor: cat.color, borderColor: cat.color },
-                    ]}
-                    onPress={() => setSelectedListCategoryId(cat.id)}
-                  >
-                    <Text style={[styles.categoryBadgeText, selectedListCategoryId === cat.id && styles.categoryBadgeTextActive]}>
-                      {cat.emoji} {cat.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+
             </>
           }
           ListEmptyComponent={
@@ -442,53 +417,7 @@ export default function ListScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* Category filter for lists */}
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.categoryScroll}
-                contentContainerStyle={styles.categoryScrollContent}
-              >
-                {/* All option */}
-                <TouchableOpacity
-                  style={[
-                    styles.categoryBadge,
-                    (selectedListCategoryId === null || selectedListCategoryId === 'all') && { backgroundColor: '#F5C842', borderColor: '#F5C842' },
-                  ]}
-                  onPress={() => setSelectedListCategoryId('all')}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[
-                    styles.categoryBadgeText,
-                    (selectedListCategoryId === null || selectedListCategoryId === 'all') && styles.categoryBadgeTextActive
-                  ]}>
-                    전체
-                  </Text>
-                </TouchableOpacity>
 
-                {/* Category options */}
-                {categories && Array.isArray(categories) && categories.map((cat) => {
-                  const isSelected = selectedListCategoryId === cat.id;
-                  return (
-                    <TouchableOpacity
-                      key={cat.id}
-                      style={[
-                        styles.categoryBadge,
-                        isSelected && {
-                          backgroundColor: cat.color,
-                          borderColor: cat.color,
-                        },
-                      ]}
-                      onPress={() => setSelectedListCategoryId(cat.id)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.categoryBadgeText, isSelected && styles.categoryBadgeTextActive]}>
-                        {cat.emoji} {cat.name}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
             </>
           }
           ListEmptyComponent={

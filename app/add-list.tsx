@@ -26,9 +26,6 @@ export default function AddListScreen() {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(
-    categories && categories.length > 0 ? categories[0].id : 'other'
-  );
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,7 +39,7 @@ export default function AddListScreen() {
     }
 
     try {
-      await createList(title.trim(), selectedCategoryId);
+      await createList(title.trim(), 'other');
       console.log('List created successfully');
       setIsSaving(false);
       router.back();
@@ -114,42 +111,7 @@ export default function AddListScreen() {
             </View>
           )}
 
-          {/* Category selection */}
-          <View style={styles.categorySection}>
-            <Text style={styles.sectionLabel}>카테고리 선택</Text>
-            <View style={styles.categoryGrid}>
-              {categories && categories.map((cat) => {
-                const isSelected = selectedCategoryId === cat.id;
-                return (
-                  <TouchableOpacity
-                    key={cat.id}
-                    style={[
-                      styles.categoryChip,
-                      isSelected && {
-                        borderColor: cat.color,
-                        backgroundColor: `${cat.color}25`,
-                      },
-                    ]}
-                    onPress={() => setSelectedCategoryId(cat.id)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.categoryChipEmoji}>{cat.emoji}</Text>
-                    <Text
-                      style={[
-                        styles.categoryChipName,
-                        isSelected && { color: cat.color, fontWeight: '700' },
-                      ]}
-                    >
-                      {cat.name}
-                    </Text>
-                    {isSelected && (
-                      <IconSymbol name="checkmark.circle.fill" size={14} color={cat.color} />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
+
 
           {/* Info */}
           <View style={styles.infoSection}>
