@@ -485,6 +485,29 @@ export default function ListDetailScreen() {
               >
                 <IconSymbol name="pencil" size={16} color="#4ECDC4" />
               </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  Alert.alert(
+                    '항목 삭제',
+                    `"${item.title}"을(를) 삭제하시겠습니까?`,
+                    [
+                      {
+                        text: '취소',
+                        onPress: () => {},
+                        style: 'cancel',
+                      },
+                      {
+                        text: '삭제',
+                        onPress: () => deleteListItem(list.id, item.id),
+                        style: 'destructive',
+                      },
+                    ]
+                  );
+                }}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <IconSymbol name="trash" size={16} color="#EF4444" />
+              </TouchableOpacity>
             </View>
           </TouchableOpacity>
         )}
