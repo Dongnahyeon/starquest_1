@@ -427,7 +427,8 @@ export default function ListDetailScreen() {
             ]}
             onLongPress={() => handleStartDrag(item.id)}
             onPress={() => draggedItemId && handleDropItem(item.id)}
-            activeOpacity={0.7}
+            activeOpacity={1}
+            disabled={!draggedItemId}
           >
             <TouchableOpacity
               style={styles.checkboxContainer}
@@ -471,7 +472,7 @@ export default function ListDetailScreen() {
               )}
             </View>
 
-            <View style={styles.itemActions}>
+            <View style={styles.itemActions} pointerEvents="box-only">
               <TouchableOpacity
                 onPress={() => handleEditItem(item.id, item.title)}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
