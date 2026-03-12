@@ -118,31 +118,33 @@ export function useLists() {
   const deleteListItem = useCallback(
     async (listId: string, itemId: string) => {
       console.log('[LOG] deleteListItem 함수 호출:', listId, itemId);
-      setLists((prev) =>
-        prev.map((list) => {
-          if (list.id === listId) {
-            const itemToDelete = list.items.find((i) => i.id === itemId);
-            console.log('[LOG] 삭제할 항목:', itemToDelete?.title);
-            const updatedItems = list.items.filter((i) => i.id !== itemId);
-            const wasCompleted = itemToDelete?.completed ?? false;
-            const completionCount = wasCompleted ? list.completionCount - 1 : list.completionCount;
-            const totalCount = list.totalCount - 1;
-            const isCompleted = completionCount === totalCount && totalCount > 0;
-            console.log('[LOG] 삭제 후 항목:', updatedItems.length, '개');
-            return {
-              ...list,
-              items: updatedItems,
-              completionCount,
-              totalCount,
-              isCompleted,
-              updatedAt: new Date().toISOString(),
-            };
-          }
-          return list;
-        })
-      );
+      const updatedLists = lists.map((list) => {
+        if (list.id === listId) {
+          const itemToDelete = list.items.find((i) => i.id === itemId);
+          console.log('[LOG] 삭제할 항목:', itemToDelete?.title);
+          const updatedItems = list.items.filter((i) => i.id !== itemId);
+          const wasCompleted = itemToDelete?.completed ?? false;
+          const completionCount = wasCompleted ? list.completionCount - 1 : list.completionCount;
+          const totalCount = list.totalCount - 1;
+          const isCompleted = completionCount === totalCount && totalCount > 0;
+          console.log('[LOG] 삭제 후 항목:', updatedItems.length, '개');
+          return {
+            ...list,
+            items: updatedItems,
+            completionCount,
+            totalCount,
+            isCompleted,
+            updatedAt: new Date().toISOString(),
+          };
+        }
+        return list;
+      });
+      
+      setLists(updatedLists);
+      await saveToStorage(updatedLists);
+      console.log('[LOG] deleteListItem 저장 완료');
     },
-    []
+    [lists, saveToStorage]
   );
 
   const toggleListItem = useCallback(
