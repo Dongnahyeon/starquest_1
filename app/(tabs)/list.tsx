@@ -28,7 +28,6 @@ export default function ListScreen() {
   const { achievements, categories, completeAchievement, deleteAchievement, reorderAchievements, updateAchievementTitle } = useAchievementsContext();
   const { lists, deleteList, reorderLists } = useListsContext();
   const [selectedTab, setSelectedTab] = useState<'achievements' | 'lists'>('achievements');
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | 'all'>('all');
   const [justCompleted, setJustCompleted] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
@@ -47,10 +46,7 @@ export default function ListScreen() {
   const [colorPickerVisible, setColorPickerVisible] = useState(false);
   const { addCategory, updateCategory, deleteCategory } = useAchievementsContext();
 
-  const filteredAchievements =
-    selectedCategoryId === 'all'
-      ? (achievements && Array.isArray(achievements) ? achievements : [])
-      : (achievements && Array.isArray(achievements) ? achievements.filter((a) => a.categoryId === selectedCategoryId) : []);
+  const filteredAchievements = achievements && Array.isArray(achievements) ? achievements : [];
 
   // Group by category
   const grouped = (categories && Array.isArray(categories) && filteredAchievements && Array.isArray(filteredAchievements))
@@ -343,32 +339,7 @@ export default function ListScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* Category filter */}
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.categoryScroll}
-              >
-                <TouchableOpacity
-                  style={[styles.categoryBadge, selectedCategoryId === 'all' && styles.categoryBadgeActive]}
-                  onPress={() => setSelectedCategoryId('all')}
-                >
-                  <Text style={[styles.categoryBadgeText, selectedCategoryId === 'all' && { color: '#0A0E1A' }]}>
-                    전체
-                  </Text>
-                </TouchableOpacity>
-                {(categories && Array.isArray(categories)) && categories.map((cat) => (
-                  <TouchableOpacity
-                    key={cat.id}
-                    style={[styles.categoryBadge, selectedCategoryId === cat.id && styles.categoryBadgeActive]}
-                    onPress={() => setSelectedCategoryId(cat.id)}
-                  >
-                    <Text style={[styles.categoryBadgeText, selectedCategoryId === cat.id && { color: '#0A0E1A' }]}>
-                      {cat.emoji} {cat.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+
             </>
           }
           ListEmptyComponent={
