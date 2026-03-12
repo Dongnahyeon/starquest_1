@@ -101,7 +101,7 @@ export function ConstellationView({ category, achievements, onStarPress }: Const
           const starColor = getStarColor(pos.achievement.completionCount);
           // 별 개수에 따라 크기 동적 조정
           const starCount = positions.length;
-          let baseSizeByCount = 14; // 1~5개: 14px
+          let baseSizeByCount = 12; // 1~5개: 12px
           if (starCount >= 100) {
             baseSizeByCount = 1; // 100개 이상: 1px
           } else if (starCount >= 70) {
@@ -109,13 +109,13 @@ export function ConstellationView({ category, achievements, onStarPress }: Const
           } else if (starCount >= 50) {
             baseSizeByCount = 3; // 50~69개: 3px
           } else if (starCount >= 25) {
-            baseSizeByCount = 6; // 25~49개: 6px
+            baseSizeByCount = 5; // 25~49개: 5px
           } else if (starCount >= 16) {
-            baseSizeByCount = 8; // 16~24개: 8px
+            baseSizeByCount = 6; // 16~24개: 6px
           } else if (starCount >= 10) {
-            baseSizeByCount = 10; // 10~15개: 10px
+            baseSizeByCount = 8; // 10~15개: 8px
           } else if (starCount >= 6) {
-            baseSizeByCount = 12; // 6~9개: 12px
+            baseSizeByCount = 10; // 6~9개: 10px
           }
           const glowSize = baseSizeByCount + glowIntensity * 12;
 
