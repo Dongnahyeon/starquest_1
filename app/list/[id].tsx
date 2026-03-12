@@ -303,24 +303,7 @@ export default function ListDetailScreen() {
                 <TouchableOpacity style={styles.deleteButton} onPress={handleEditListTitle}>
                   <IconSymbol name="pencil" size={20} color="#E2E8F0" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.deleteButton} onPress={() => {
-                  Alert.alert(
-                    '리스트 삭제',
-                    `"${list?.title}"를 삭제하시겠습니까?`,
-                    [
-                      {
-                        text: '취소',
-                        onPress: () => {},
-                        style: 'cancel',
-                      },
-                      {
-                        text: '삭제',
-                        onPress: () => handleConfirmDelete(),
-                        style: 'destructive',
-                      },
-                    ]
-                  );
-                }}>
+                <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteList}>
                   <IconSymbol name="trash.fill" size={20} color="#E2E8F0" />
                 </TouchableOpacity>
               </View>
