@@ -49,12 +49,24 @@ export default function ListScreen() {
 
   const filteredAchievements = achievements && Array.isArray(achievements) ? achievements : [];
 
-  // Sort lists by creation date (newest first)
+  // Sort lists by most recent item addition (newest first)
   const filteredLists = lists && Array.isArray(lists) 
     ? [...lists].sort((a, b) => {
-        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return dateB - dateA; // 최신순 정렬
+        const getLatestItemTime = (list: any) => {
+          if (!list.items || list.items.length === 0) {
+            return list.updatedAt ? new Date(list.updatedAt).getTime() : new Date(list.createdAt).getTime();
+          }
+          const latestItem = list.items.reduce((latest: any, item: any) => {
+            const itemTime = new Date(item.createdAt).getTime();
+            const latestTime = new Date(latest.createdAt).getTime();
+            return itemTime > latestTime ? item : latest;
+          });
+          return new Date(latestItem.createdAt).getTime();
+        };
+        
+        const timeA = getLatestItemTime(a);
+        const timeB = getLatestItemTime(b);
+        return timeB - timeA;
       })
     : [];
 
