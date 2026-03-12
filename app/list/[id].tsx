@@ -433,7 +433,11 @@ export default function ListDetailScreen() {
               styles.itemRow,
               draggedItemId === item.id && styles.itemRowDragging,
             ]}
-            onPress={() => draggedItemId && handleDropItem(item.id)}
+            onPress={() => {
+              if (draggedItemId) {
+                handleDropItem(item.id);
+              }
+            }}
             activeOpacity={1}
           >
             <TouchableOpacity
@@ -478,7 +482,7 @@ export default function ListDetailScreen() {
               )}
             </View>
 
-            <View style={styles.itemActions} pointerEvents="box-none">
+            <View style={styles.itemActions}>
               <TouchableOpacity
                 onPress={() => handleHideItem(item.id, item.title)}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
