@@ -46,10 +46,22 @@ export default function HomeScreen() {
 
   // Include all categories for display
   const displayCategories = (categories && Array.isArray(categories)) ? categories : [];
+  
+  // Add "전체" option at the beginning
+  const allCategoriesOption: Category = {
+    id: 'all',
+    name: '전체',
+    emoji: '⭐',
+    color: '#F5C842',
+    createdAt: new Date().toISOString(),
+  };
+  const categoriesWithAll = [allCategoriesOption, ...displayCategories];
 
-  const currentCategoryId = selectedCategoryId ?? (displayCategories[0]?.id ?? null);
-  const currentCategory = displayCategories.find((c) => c.id === currentCategoryId) ?? displayCategories[0];
-  const currentAchievements = achievements.filter((a) => a.categoryId === currentCategoryId);
+  const currentCategoryId = selectedCategoryId ?? 'all';
+  const currentCategory = categoriesWithAll.find((c) => c.id === currentCategoryId) ?? categoriesWithAll[0];
+  const currentAchievements = currentCategoryId === 'all' 
+    ? achievements 
+    : achievements.filter((a) => a.categoryId === currentCategoryId);
 
   const totalStars = achievements.length;
   const completedStars = achievements.filter((a) => a.completionCount > 0).length;
@@ -116,8 +128,10 @@ export default function HomeScreen() {
           style={styles.categoryScroll}
           contentContainerStyle={styles.categoryScrollContent}
         >
-          {displayCategories.map((cat) => {
-            const catAchievements = achievements.filter((a) => a.categoryId === cat.id);
+          {categoriesWithAll.map((cat) => {
+            const catAchievements = cat.id === 'all' 
+              ? achievements 
+              : achievements.filter((a) => a.categoryId === cat.id);
             const isSelected = cat.id === currentCategoryId;
             return (
               <TouchableOpacity
