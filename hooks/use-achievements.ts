@@ -217,6 +217,28 @@ export function useAchievements() {
     [data.categories]
   );
 
+  const updateCategory = useCallback(
+    (id: string, name: string, emoji: string, color: string) => {
+      setData((prev) => ({
+        ...prev,
+        categories: prev.categories.map((cat) =>
+          cat.id === id ? { ...cat, name, emoji, color } : cat
+        ),
+      }));
+    },
+    []
+  );
+
+  const deleteCategory = useCallback(
+    (id: string) => {
+      setData((prev) => ({
+        ...prev,
+        categories: prev.categories.filter((cat) => cat.id !== id),
+      }));
+    },
+    []
+  );
+
   const totalCompletions = data.achievements.reduce((sum, a) => sum + a.completionCount, 0);
   const totalAchievements = data.achievements.length;
 
@@ -235,6 +257,8 @@ export function useAchievements() {
     reorderAchievements,
     updateAchievementTitle,
     addCategory,
+    updateCategory,
+    deleteCategory,
     getAchievementById,
     getCategoryById,
     getCategoryByName,
